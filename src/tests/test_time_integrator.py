@@ -35,6 +35,23 @@ def test_time_integrator_euler(TimeIntegratorCls, dynamical_system):
     dim = dynamical_system.dim
     q0 = np.random.normal(size=dim)
     qdot0 = np.random.normal(size=dim)
+    q_c = np.random.normal(size=dim)
+    qdot_c = np.random.normal(size=dim)
     time_integrator = TimeIntegratorCls(dynamical_system, dt)
+    # Integrate using Python
     time_integrator.set_state(q0, qdot0)
+    time_integrator.fast_code = False
     time_integrator.integrate(nsteps)
+    q_python = np.array(time_integrator.q)
+    qdot_python = np.array(time_integrator.qdot)
+    # Integrate using C library
+    time_integrator.set_state(q0, qdot0)
+    time_integrator.fast_code = True
+    time_integrator.integrate(nsteps)
+    q_c = np.array(time_integrator.q)
+    qdot_c = np.array(time_integrator.qdot)
+    # Compare
+    tolerance = 1.0e-5
+    assert (np.linalg.norm(q_c - q_python) < tolerance) and (
+        np.linalg.norm(qdot_c - qdot_python) < tolerance
+    )

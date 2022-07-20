@@ -165,7 +165,7 @@ class ForwardEulerIntegrator(TimeIntegrator):
             for _ in range(n_steps):
                 # Compute acceleration
                 acceleration[:] = self.dynamical_system.call(
-                    np.concatenate(self.q, self.qdot)
+                    np.concatenate((self.q, self.qdot))
                 )
                 # Update position and momentum
                 self.q[:] += self.dt * self.qdot[:]
@@ -283,32 +283,32 @@ class RK4Integrator(TimeIntegrator):
                 qt[:] = self.q[:]
                 qdott[:] = self.qdot[:]
                 # Stage 1: compute k1
-                acceleration[:] = self.dynamical_system.acceleration(
-                    np.concatenate(self.q, self.qdot)
+                acceleration[:] = self.dynamical_system.call(
+                    np.concatenate((self.q, self.qdot))
                 )
                 self.k1q[:] = self.qdot[:]
-                self.k1p[:] = self.qdotdot[:]
+                self.k1qdot[:] = acceleration[:]
                 # Stage 2: compute k2
                 self.q[:] += 0.5 * self.dt * self.k1q[:]
                 self.qdot[:] += 0.5 * self.dt * self.k1qdot[:]
-                acceleration[:] = self.dynamical_system.acceleration(
-                    np.concatenate(self.q, self.qdot)
+                acceleration[:] = self.dynamical_system.call(
+                    np.concatenate((self.q, self.qdot))
                 )
                 # Stage 3: compute k3
                 self.k2q[:] = self.qdot[:]
                 self.k2qdot[:] = acceleration[:]
                 self.q[:] = qt[:] + 0.5 * self.dt * self.k2q[:]
                 self.qdot[:] = qdott[:] + 0.5 * self.dt * self.k2qdot[:]
-                acceleration[:] = self.dynamical_system.acceleration(
-                    np.concatenate(self.q, self.qdot)
+                acceleration[:] = self.dynamical_system.call(
+                    np.concatenate((self.q, self.qdot))
                 )
                 self.k3q[:] = self.qdot[:]
                 self.k3qdot[:] = acceleration[:]
                 # Stage 4: compute k4
                 self.q[:] = qt[:] + self.dt * self.k3q[:]
                 self.qdot[:] = qdott[:] + self.dt * self.k3qdot[:]
-                acceleration[:] = self.dynamical_system.acceleration(
-                    np.concatenate(self.q, self.qdot)
+                acceleration[:] = self.dynamical_system.call(
+                    np.concatenate((self.q, self.qdot))
                 )
                 self.k4q[:] = self.qdot[:]
                 self.k4qdot[:] = acceleration[:]
