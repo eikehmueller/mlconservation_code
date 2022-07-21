@@ -23,7 +23,7 @@ class DynamicalSystem(ABC):
         """
 
 
-class LagrangianDynamicalSystem(DynamicalSystem, tf.keras.layers.Layer):
+class LagrangianDynamicalSystem(tf.keras.layers.Layer):
     """
 
     The time evolution of the variable y = (q, dot{q})
@@ -47,7 +47,8 @@ class LagrangianDynamicalSystem(DynamicalSystem, tf.keras.layers.Layer):
     """
 
     def __init__(self, lagrangian):
-        super().__init__(lagrangian.dim)
+        super().__init__()
+        self.dim = lagrangian.dim
         self.lagrangian = lagrangian
 
     @tf.function
@@ -64,7 +65,7 @@ class LagrangianDynamicalSystem(DynamicalSystem, tf.keras.layers.Layer):
 
     @tf.function
     def J_qdotqdot(self, y):
-        """2x2 matrix J_{dot{q},dot{q}}"""
+        """d x d matrix J_{dot{q},dot{q}}"""
         rows = []
         for j in range(self.dim, 2 * self.dim):
             row = []
@@ -75,7 +76,7 @@ class LagrangianDynamicalSystem(DynamicalSystem, tf.keras.layers.Layer):
 
     @tf.function
     def J_qqdot(self, y):
-        """2x2 matrix J_{q,dot{q}}"""
+        """d x d matrix J_{q,dot{q}}"""
         rows = []
         for j in range(0, self.dim):
             row = []
@@ -86,9 +87,10 @@ class LagrangianDynamicalSystem(DynamicalSystem, tf.keras.layers.Layer):
 
     @tf.function
     def J_qdotqdot_inv(self, y):
-        """2x2 matrix (J_{dot{q},dot{q}})^{-1}"""
+        """d x d matrix (J_{dot{q},dot{q}})^{-1}"""
         return tf.linalg.inv(self.J_qdotqdot(y))
 
+    @tf.function
     def call(self, y):
         """Return value of the acceleration d^2q/dt^2(q,qdot) for a given input y
 
