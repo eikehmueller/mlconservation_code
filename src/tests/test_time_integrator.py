@@ -1,7 +1,11 @@
 """Test numerical time integrators"""
 import numpy as np
 import pytest
-from dynamical_system import HarmonicOscillatorSystem, XYModelSystem
+from dynamical_system import (
+    HarmonicOscillatorSystem,
+    XYModelSystem,
+    DoublePendulumSystem,
+)
 from common import harmonic_oscillator_matrices
 from time_integrator import ForwardEulerIntegrator, RK4Integrator
 
@@ -21,7 +25,19 @@ def xy_model_system():
     return XYModelSystem(dim)
 
 
-@pytest.fixture(params=["harmonic_oscillator_system", "xy_model_system"])
+@pytest.fixture
+def double_pendulum_system():
+    """Construct double pendulum dynamical system object"""
+    m0 = 0.9
+    m1 = 1.1
+    L0 = 1.3
+    L1 = 0.87
+    return DoublePendulumSystem(m0, m1, L0, L1)
+
+
+@pytest.fixture(
+    params=["harmonic_oscillator_system", "xy_model_system", "double_pendulum_system"]
+)
 def dynamical_system(request):
     return request.getfixturevalue(request.param)
 

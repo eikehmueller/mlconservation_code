@@ -181,3 +181,93 @@ class XYModelSystem(DynamicalSystem):
             / self.a_lat**2
             * (np.sin(q - np.roll(q, +1)) + np.sin(q - np.roll(q, -1)))
         )
+
+
+class DoublePendulumSystem(DynamicalSystem):
+    """Dynamical system for double pendulum.
+
+    The equations of motion are given by
+
+      d^2theta_0/dt^2 = (f_0-alpha_0*f_1) / (1-alpha_0*alpha_1)
+      d^2theta_1/dt^2 = (-alpha_1*f_0+f_1) / (1-alpha_0*alpha_1)
+
+    with
+
+    alpha_0 = L_1/L_0 * m_1/(m_0+m_1)*cos(theta_0-theta_1)
+    alpha_1 = L_0/L_1 * cos(theta_0-theta_1)
+
+    f_0 = -L_1/L_0 * m_1/(m_0+m_1) * dot(theta_1)^2*sin(theta_0-theta_1)
+          - g/L_0*sin(theta_0)
+
+    f_1 = L_0/L_1 * dot(theta_0)^2*sin(theta_0-theta_1) - g/L_1*sin(theta_1)
+
+        Here theta_0 and theta_1 are the angles relative to the vertical,
+    m_0, m_1 are the masses and L_0, L_1 are the lengths of the rods.
+
+    For a derivation of the equations of motion see for example
+
+    https://diego.assencio.com/?index=1500c66ae7ab27bb0106467c68feebc6
+
+    :arg m0: Mass of first pendulum
+    :arg m1: Mass of second pendulum
+    :arg L0: length of first rod
+    :arg L1: length of second rod
+    :arg g_grav: gravitation acceleration
+    """
+
+    def __init__(self, m0=1.0, m1=1.0, L0=1.0, L1=1.0, g_grav=9.81):
+        """Construct a new instance
+
+        :arg dim: dimension of state space.
+        """
+        super().__init__(2)
+        self.m0 = m0
+        self.m1 = m1
+        self.L0 = L0
+        self.L1 = L1
+        self.g_grav = g_grav
+        self.header_code = "#include <math.h>"
+        self.preamble_code = """
+        double alpha0, alpha1;
+        double f0, f1;
+        double rho;
+        """
+        self.acceleration_code = f"""
+        alpha0 = ({self.L1})/({self.L0})
+               * ({self.m1})/({self.m0}+{self.m1})
+               * cos(q[0]-q[1]);
+        alpha1 = ({self.L0})/({self.L1})
+               * cos(q[0]-q[1]);
+        f0 = -({self.L1})/({self.L0})
+           * ({self.m1})/({self.m0}+{self.m1})
+           * qdot[1]*qdot[1]
+           * sin(q[0]-q[1])
+           - ({self.g_grav})/({self.L0})*sin(q[0]);
+        f1 = ({self.L0})/({self.L1})
+           * qdot[0]*qdot[0]
+           * sin(q[0]-q[1])
+           - ({self.g_grav})/({self.L1})*sin(q[1]);
+        rho = 1./(1.-alpha0*alpha1);
+        acceleration[0] = rho*(f0-alpha0*f1);
+        acceleration[1] = rho*(f1-alpha1*f0);
+        """
+
+    def call(self, y):
+        """Return the acceleration (rate of change of qdot) a(y)
+
+        :arg y: phase space state vector (q,qdot) at which to evaluate the
+                acceleration
+        """
+        theta0, theta1, dtheta0, dtheta1 = y[:]
+        alpha0 = (
+            self.L1 / self.L0 * self.m1 / (self.m0 + self.m1) * np.cos(theta0 - theta1)
+        )
+        alpha1 = self.L0 / self.L1 * np.cos(theta0 - theta1)
+        f0 = -self.L1 / self.L0 * self.m1 / (self.m0 + self.m1) * dtheta1**2 * np.sin(
+            theta0 - theta1
+        ) - self.g_grav / self.L0 * np.sin(theta0)
+        f1 = self.L0 / self.L1 * dtheta0**2 * np.sin(
+            theta0 - theta1
+        ) - self.g_grav / self.L1 * np.sin(theta1)
+        rho = 1 / (1 - alpha0 * alpha1)
+        return np.array([rho * (f0 - alpha0 * f1), rho * (f1 - alpha1 * f0)])

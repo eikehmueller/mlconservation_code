@@ -96,3 +96,48 @@ class XYModelLagrangian(Lagrangian):
             * tf.reduce_sum(-tf.cos(q - tf.roll(q, shift=-1, axis=1)) + 1.0, axis=1)
         )
         return T_kin - V_pot
+
+
+class DoublePendulumLagrangian(Lagrangian):
+    """Implements the Lagrangian of the double pendulum given by
+
+      L = 1/2*(m_0+m_1)*L_0^2*dot(theta_0)^2
+        + 1/2*m_1*L_1^2*dot(theta_1)^2
+        + m_1*L_0*L_1*dot(theta_0)*dot(theta_1)*cos(theta_0-theta_1)
+        - (m_0+m_1)*g*L_0*(1-cos(theta_0))
+        - m_1*g*L_1*(1-cos(theta_1))
+
+    Here theta_0 and theta_1 are the angles relative to the vertical,
+    m_0, m_1 are the masses and L_0, L_1 are the lengths of the rods.
+
+    :arg m0: Mass of first pendulum
+    :arg m1: Mass of second pendulum
+    :arg L0: length of first rod
+    :arg L1: length of second rod
+    :arg g_grav: gravitation acceleration
+    """
+
+    def __init__(self, m0=1.0, m1=1.0, L0=1.0, L1=1.0, g_grav=9.81):
+        super().__init__(2)
+        self.m0 = m0
+        self.m1 = m1
+        self.L0 = L0
+        self.L1 = L1
+        self.g_grav = g_grav
+
+    @tf.function
+    def __call__(self, inputs):
+        """Evaluate Lagrangian
+
+        :arg inputs: Values of q and qdot in a single tensor of shape (None,4)
+        """
+        theta0, theta1, dtheta0, dtheta1 = tf.unstack(inputs, axis=1)
+        T_kin = (
+            1 / 2 * (self.m0 + self.m1) * self.L0**2 * dtheta0**2
+            + 1 / 2 * self.m1 * self.L1**2 * dtheta1**2
+            + self.m1 * self.L0 * self.L1 * dtheta0 * dtheta1 * tf.cos(theta0 - theta1)
+        )
+        V_pot = (self.m0 + self.m1) * self.g_grav * self.L0 * (
+            1 - tf.cos(theta0)
+        ) + self.m1 * self.g_grav * self.L1 * (1 - tf.cos(theta1))
+        return T_kin - V_pot

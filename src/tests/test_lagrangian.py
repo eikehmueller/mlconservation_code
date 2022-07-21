@@ -1,11 +1,16 @@
 import numpy as np
 import pytest
 import tensorflow as tf
-from lagrangian import HarmonicOscillatorLagrangian, XYModelLagrangian
+from lagrangian import (
+    HarmonicOscillatorLagrangian,
+    XYModelLagrangian,
+    DoublePendulumLagrangian,
+)
 from dynamical_system import (
     LagrangianDynamicalSystem,
     HarmonicOscillatorSystem,
     XYModelSystem,
+    DoublePendulumSystem,
 )
 from common import harmonic_oscillator_matrices
 
@@ -39,8 +44,8 @@ def test_harmonic_oscillator_lagrangian(dim):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_harmonic_oscillator_force(dim):
-    """Check that the force is correct for the Harmonic Oscillator
+def test_harmonic_oscillator_acceleration(dim):
+    """Check that the acceleration is correct for the Harmonic Oscillator
     Lagrangian. Not that in this case we have that
 
     d^2q/dt^2 = M^{-1} A q
@@ -52,11 +57,7 @@ def test_harmonic_oscillator_force(dim):
     M_mat, A_mat = harmonic_oscillator_matrices(dim)
     lagrangian = HarmonicOscillatorLagrangian(dim, M_mat, A_mat)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q = np.random.normal(size=dim)
-    qdot = np.array(np.random.normal(size=dim), dtype=np.float32)
-    q_qdot = tf.constant(
-        np.concatenate((q, qdot)).reshape((1, 2 * dim)), dtype=tf.float32
-    )
+    q_qdot = tf.constant(np.random.normal(size=(1, 2 * dim)), dtype=tf.float32)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = HarmonicOscillatorSystem(dim, M_mat, A_mat)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
@@ -85,8 +86,8 @@ def test_xy_model_lagrangian(dim):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_xy_model_force(dim):
-    """Check that the force is correct for the XY Model
+def test_xy_model_acceleration(dim):
+    """Check that the acceleration is correct for the XY Model
     Lagrangian.
 
     Evaluate this for a random phase space vector (q,qdot)
@@ -95,13 +96,31 @@ def test_xy_model_force(dim):
     """
     lagrangian = XYModelLagrangian(dim)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q = np.random.normal(size=dim)
-    qdot = np.array(np.random.normal(size=dim), dtype=np.float32)
-    q_qdot = tf.constant(
-        np.concatenate((q, qdot)).reshape((1, 2 * dim)), dtype=tf.float32
-    )
+    q_qdot = tf.constant(np.random.normal(size=(1, 2 * dim)), dtype=tf.float32)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = XYModelSystem(dim)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
+    tolerance = 1.0e-5
+    assert np.linalg.norm(lagrangian_acc - acc) < tolerance
+
+
+def test_double_pendulum_acceleration():
+    """Check that the acceleration is correct for the double pendulum
+    Lagrangian.
+
+    Evaluate this for a random phase space vector (q,qdot)
+
+    :arg dim: dimension of state space
+    """
+    m0 = 0.9
+    m1 = 1.1
+    L0 = 1.3
+    L1 = 0.87
+    lagrangian = DoublePendulumLagrangian(m0, m1, L0, L1)
+    lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
+    q_qdot = tf.constant(np.random.normal(size=(1, 4)), dtype=tf.float32)
+    lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
+    dynamical_system = DoublePendulumSystem(m0, m1, L0, L1)
+    acc = dynamical_system.call(np.reshape(q_qdot, 4))
     tolerance = 1.0e-5
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
