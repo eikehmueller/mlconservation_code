@@ -1,9 +1,13 @@
+import os
+import errno
+import json
 import numpy as np
 import tensorflow as tf
+from auxilliary import ndarrayDecoder, ndarrayEncoder
 from dynamical_system import LagrangianDynamicalSystem
 
 
-class XYModelNNLagrangian(tf.keras.models.Model):
+class XYModelNNLagrangian(tf.keras.layers.Layer):
     """Neural network representation of Lagrangian for the XY model
 
     Rotational invariance
@@ -62,14 +66,74 @@ class XYModelNNLagrangian(tf.keras.models.Model):
             outputs.append(x)
         return 1.0 / noffsets * tf.add_n(outputs)
 
-    def get_config(self):
-        """Get the model configuration"""
-        return {"dim": self.dim, "rotation_invariant": self.rotation_invariant}
+    def save(self, filepath, overwrite=True):
+        """Save the model to the specified directory
+
+        :arg filepath: directory in which the model will be
+        """
+        # Create directory if it does not already exist
+        try:
+            os.makedirs(filepath)
+        except OSError as e:
+            if e.errno != errno.EEXIST or (not overwrite):
+                raise
+        # Save configuration
+        with open(os.path.join(filepath, "config.json"), "w", encoding="utf8") as f:
+            json.dump(self.get_config(), f, indent=4, ensure_ascii=True)
+
+        layers = []
+        for layer in self.dense_layers:
+            layers.append(
+                {
+                    "class": type(layer).__module__ + "." + type(layer).__name__,
+                    "config": layer.get_config(),
+                    "weights": layer.get_weights(),
+                }
+            )
+        with open(os.path.join(filepath, "weights.json"), "w", encoding="utf8") as f:
+            json.dump(layers, f, cls=ndarrayEncoder, indent=4)
 
     @classmethod
-    def from_config(cls, config):
-        """Reconstruct model from configuration"""
-        return cls(**config)
+    def from_saved_model(cls, filepath):
+        """Construct object from saved model in a specified directory
+
+        :arg directory: directory in which the model will be stored
+        """
+        import keras  # pylint: disable=reimported,redefined-outer-name,unused-import,import-outside-toplevel
+
+        # Load configurstion
+        with open(os.path.join(filepath, "config.json"), "r", encoding="utf8") as f:
+            config = json.load(f)
+
+        # Construct new instance of model
+        model = cls.from_config(config)
+        # Set layers and layer weights
+        model.dense_layers = []
+        layer_weights = {}
+        with open(os.path.join(filepath, "weights.json"), "r", encoding="utf8") as f:
+            layer_list = json.load(f, cls=ndarrayDecoder)
+        for layer_spec in layer_list:
+            layer_cls = eval(layer_spec["class"])
+            config = layer_spec["config"]
+            weights = layer_spec["weights"]
+            layer = layer_cls.from_config(config)
+            layer_weights[layer.name] = weights
+            model.dense_layers.append(layer)
+        # Call model once to initialise layer shapes
+        inputs = tf.constant(np.zeros([1, 2 * model.dim]))
+        outputs = model(inputs)
+        # Now set the layer weights
+        for layer in model.dense_layers:
+            layer.set_weights(layer_weights[layer.name])
+        return model
+
+    def get_config(self):
+        """Get the model configuration"""
+        return {
+            "dim": self.dim,
+            "rotation_invariant": self.rotation_invariant,
+            "shift_invariant": self.shift_invariant,
+        }
 
     @tf.function
     def invariant(self, inputs):
