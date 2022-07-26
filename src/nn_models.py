@@ -161,6 +161,7 @@ class LagrangianModel(tf.keras.models.Model):
     def __init__(self, nn_lagrangian, **kwargs):
         super(LagrangianModel, self).__init__(**kwargs)
         self.dynamical_system = LagrangianDynamicalSystem(nn_lagrangian)
+        self.dim = self.dynamical_system.dim
 
     def call(self, inputs):
         """Evaluate Dynamical system defined by the model Lagrangian
@@ -168,4 +169,13 @@ class LagrangianModel(tf.keras.models.Model):
 
         :arg inputs: phase space vector q,qdot
         """
-        return self.dynamical_system(inputs)
+        if len(inputs.shape) == 1:
+            # If input is a one-dimensional tensor, extend to two dimensions to be able to use
+            # the tensorflow code which expects tensors of shape (batchsize,dim)
+            return (
+                self.dynamical_system(tf.constant(inputs, shape=(1, inputs.shape[0])))
+                .numpy()
+                .flatten()
+            )
+        else:
+            return self.dynamical_system(inputs)
