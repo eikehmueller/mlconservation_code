@@ -37,7 +37,7 @@ class TimeIntegrator(ABC):
         self.qdot = np.zeros(dynamical_system.dim)
         self.label = None
         # Check whether dynamical system has a C-code snippet for computing the acceleration
-        self.fast_code = self.dynamical_system.acceleration_code is not None
+        self.fast_code = hasattr(self.dynamical_system, "acceleration_code")
 
     def set_state(self, q, qdot):
         """Set the current state of the integrator to a specified
