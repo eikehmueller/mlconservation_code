@@ -54,8 +54,8 @@ class DataGenerator(object):
                 dy = self.sigma * np.random.normal(size=dim)
                 yield (X + dX, y + dy)
         else:
-            dt = 0.05
-            Tinterval = 1.0
+            dt = 0.02
+            Tinterval = 2.0
             n_steps = int(Tinterval / dt)
             q, qdot = self.initializer.draw()
             time_integrator = RK4Integrator(self.dynamical_system, dt)
