@@ -4,6 +4,7 @@ and coordinate shifts
 
 import pytest
 import numpy as np
+from time_integrator import RK4Integrator
 from nn_models import XYModelNNLagrangian, LagrangianModel
 
 
@@ -67,3 +68,53 @@ def test_xymodel_nn_lagrangian_shift_invariance(dim, offset):
     )
     dL = nn_lagrangian(X_shifted) - nn_lagrangian(X)
     assert np.linalg.norm(dL) < tolerance
+
+
+@pytest.mark.skip(reason="too expensive")
+def test_xymodel_nn_eigenstate_shift_invariance():
+    """Check that that if the dynamical system is initialised with an eigenstate
+    of the shift operator, the dynamics will will preserve shift invariance.
+
+    For this, set for j = 0,1,...,7
+
+      theta_j(0)      = alpha_1*cos(pi/4*j + delta_1)
+      dot(theta)_j(0) = alpha_2*cos(pi/4*j + delta_2)
+
+    which satisfies
+
+      theta_{j+4}(0) = -thetaj(0) and S^4 dot(theta)_{j+4}(0) = -dot(theta)_j(0).
+
+    Since the Lagrangian is shift-invariant, this will also hold at
+    later times:
+
+      theta_{j+4}(t) + theta_j(t) = 0
+    """
+    # dimension of dynamical system (number of spins)
+    dim = 4
+    # timestep size
+    dt = 0.01
+    # final time
+    t_final = 1.0
+    nn_lagrangian = XYModelNNLagrangian(
+        dim, rotation_invariant=True, shift_invariant=True
+    )
+    model = LagrangianModel(nn_lagrangian)
+    time_integrator = RK4Integrator(model, dt)
+    alpha_1 = 1.3
+    alpha_2 = 2.4
+    delta_1 = 0.3
+    delta_2 = 1.7
+    # tolerance for tests
+    tolerance = 1.0e-6
+    q0 = np.asarray(
+        alpha_1 * np.cos(0.5 * np.pi * np.arange(dim) + delta_1), dtype=np.float32
+    )
+    qdot0 = np.asarray(
+        alpha_2 * np.cos(0.5 * np.pi * np.arange(dim) + delta_2), dtype=np.float32
+    )
+    time_integrator.set_state(q0, qdot0)
+    nsteps = int(t_final / dt)
+    time_integrator.integrate(nsteps)
+    q = time_integrator.q
+    print("q = ", q)
+    assert np.linalg.norm(q + np.roll(q, shift=dim // 4, axis=0)) < tolerance
