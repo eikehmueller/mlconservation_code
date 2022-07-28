@@ -5,6 +5,7 @@ from dynamical_system import (
     HarmonicOscillatorSystem,
     XYModelSystem,
     DoublePendulumSystem,
+    RelativisticChargedParticleSystem,
 )
 from common import harmonic_oscillator_matrices
 from time_integrator import ForwardEulerIntegrator, RK4Integrator
@@ -35,8 +36,21 @@ def double_pendulum_system():
     return DoublePendulumSystem(m0, m1, L0, L1)
 
 
+@pytest.fixture
+def relativistic_charged_particle_system():
+    """Construct relativistic charged particle system object"""
+    mass = 0.87
+    charge = 1.1
+    return RelativisticChargedParticleSystem(mass, charge)
+
+
 @pytest.fixture(
-    params=["harmonic_oscillator_system", "xy_model_system", "double_pendulum_system"]
+    params=[
+        "harmonic_oscillator_system",
+        "xy_model_system",
+        "double_pendulum_system",
+        "relativistic_charged_particle_system",
+    ]
 )
 def dynamical_system(request):
     return request.getfixturevalue(request.param)

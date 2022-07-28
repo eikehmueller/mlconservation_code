@@ -141,3 +141,31 @@ class DoublePendulumLagrangian(Lagrangian):
             1 - tf.cos(theta0)
         ) + self.m1 * self.g_grav * self.L1 * (1 - tf.cos(theta1))
         return T_kin - V_pot
+
+
+class RelativisticChargedParticleLagrangian(Lagrangian):
+    """Implements the Lagrangian of a relativistic particle in an electromagnetic potential
+
+      L = 1/2*m*u^mu*u_nu + q*u^mu*A_mu(x)
+        = g_{mu,nu} * (1/2*m u^mu u^nu + q u^mu A^nu)
+
+    :arg mass: particle mass m
+    :arg charge: particle charge q
+    """
+
+    def __init__(self, mass=1.0, charge=1.0):
+        super().__init__(4)
+        self.mass = mass
+        self.charge = charge
+
+    def __call__(self, inputs):
+        # Extract velocity and vector potential
+        x_u_A = tf.unstack(inputs, axis=1)
+        u = tf.stack(x_u_A[4:8], axis=1)
+        A_vec = tf.stack(x_u_A[8:12], axis=1)
+        # Constract covariant velocity vector
+        g_metric = np.diag(np.asarray([+1, -1, -1, -1], dtype=np.float32))
+        u_cov = tf.tensordot(u, g_metric, axes=[[1], [0]])
+        return (
+            0.5 * self.mass * tf.reduce_sum(tf.multiply(u, u_cov), axis=1)
+        ) + self.charge * tf.reduce_sum(tf.multiply(A_vec, u_cov), axis=1)
