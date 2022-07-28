@@ -4,7 +4,7 @@ import json
 import numpy as np
 import tensorflow as tf
 from auxilliary import ndarrayDecoder, ndarrayEncoder
-from dynamical_system import LagrangianDynamicalSystem
+from lagrangian_dynamical_system import LagrangianDynamicalSystem
 
 
 class XYModelNNLagrangian(tf.keras.layers.Layer):

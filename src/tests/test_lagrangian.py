@@ -8,11 +8,13 @@ from lagrangian import (
     RelativisticChargedParticleLagrangian,
 )
 from dynamical_system import (
-    LagrangianDynamicalSystem,
     HarmonicOscillatorSystem,
     RelativisticChargedParticleSystem,
     XYModelSystem,
     DoublePendulumSystem,
+)
+from lagrangian_dynamical_system import (
+    LagrangianDynamicalSystem,
     RelativisticChargedParticleLagrangianDynamicalSystem,
 )
 from common import harmonic_oscillator_matrices
