@@ -6,6 +6,7 @@ from dynamical_system import (
     XYModelSystem,
     DoublePendulumSystem,
     RelativisticChargedParticleSystem,
+    DoubleWellPotentialSystem,
 )
 from common import harmonic_oscillator_matrices
 from time_integrator import ForwardEulerIntegrator, RK4Integrator
@@ -44,12 +45,23 @@ def relativistic_charged_particle_system():
     return RelativisticChargedParticleSystem(mass, charge)
 
 
+@pytest.fixture
+def double_well_potential_system():
+    """Construct double well potential system object"""
+    dim = 5
+    mass = 0.87
+    mu = 1.1
+    kappa = 0.97
+    return DoubleWellPotentialSystem(dim, mass, mu, kappa)
+
+
 @pytest.fixture(
     params=[
         "harmonic_oscillator_system",
         "xy_model_system",
         "double_pendulum_system",
         "relativistic_charged_particle_system",
+        "double_well_potential_system",
     ]
 )
 def dynamical_system(request):

@@ -169,3 +169,43 @@ class RelativisticChargedParticleLagrangian(Lagrangian):
         return (
             0.5 * self.mass * tf.reduce_sum(tf.multiply(u, u_cov), axis=1)
         ) + self.charge * tf.reduce_sum(tf.multiply(A_vec, u_cov), axis=1)
+
+
+class DoubleWellPotentialLagrangian(Lagrangian):
+    """Implements the Lagrangian of a particle moving in a rotationally invariant
+    double well potential
+
+      L = 1/2*m*|u|^2 - V(x)
+
+    with
+
+      V(x) = -mu/2*|x|^2 + kappa/4*|x|^4
+
+    where position x and velocity u are d-dimensional vectors
+
+    :arg dim: dimension d of system
+    :arg mass: particle mass m
+    :arg mu: coefficient of quadratic term, should be positive
+    :arg kappa: coefficient of quartic term, should be positive
+    """
+
+    def __init__(self, dim, mass=1.0, mu=1.0, kappa=1.0):
+        super().__init__(dim)
+        self.mass = float(mass)
+        self.mu = float(mu)
+        self.kappa = float(kappa)
+        assert self.mu > 0
+        assert self.kappa > 0
+
+    def __call__(self, inputs):
+        # Extract position and velocity
+        x_u = tf.unstack(inputs, axis=1)
+        x = tf.stack(x_u[0 : self.dim], axis=1)
+        u = tf.stack(x_u[self.dim : 2 * self.dim], axis=1)
+        x_sq = tf.reduce_sum(tf.multiply(x, x), axis=1)
+        u_sq = tf.reduce_sum(tf.multiply(u, u), axis=1)
+        return (
+            0.5 * self.mass * u_sq
+            + 0.5 * self.mu * x_sq
+            - 0.25 * self.kappa * x_sq**2
+        )

@@ -2,16 +2,20 @@ import numpy as np
 import pytest
 import tensorflow as tf
 from lagrangian import (
+    DoubleWellPotentialLagrangian,
     HarmonicOscillatorLagrangian,
     XYModelLagrangian,
     DoublePendulumLagrangian,
     RelativisticChargedParticleLagrangian,
+    DoubleWellPotentialLagrangian,
 )
 from dynamical_system import (
+    DoubleWellPotentialSystem,
     HarmonicOscillatorSystem,
     RelativisticChargedParticleSystem,
     XYModelSystem,
     DoublePendulumSystem,
+    DoubleWellPotentialSystem,
 )
 from lagrangian_dynamical_system import (
     LagrangianDynamicalSystem,
@@ -173,5 +177,26 @@ def test_relativistic_charged_particle_acceleration():
         mass, charge, E_electric, B_magnetic
     )
     acc = dynamical_system.call(np.reshape(q_qdot, [8]))
+    tolerance = 1.0e-5
+    assert np.linalg.norm(lagrangian_acc - acc) < tolerance
+
+
+@pytest.mark.parametrize("dim", [1, 2, 3, 4, 5, 6])
+def test_double_well_potential_acceleration(dim):
+    """Check that the acceleration is correct for the double well potential Lagrangian.
+
+    Evaluate this for a random phase space vector (q,qdot)
+
+    :arg dim: dimension of state space
+    """
+    mass = 1.2
+    mu = 0.97
+    kappa = 1.08
+    lagrangian = DoubleWellPotentialLagrangian(dim, mass, mu, kappa)
+    lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
+    q_qdot = tf.constant(np.random.normal(size=(1, 2 * dim)), dtype=tf.float32)
+    lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
+    dynamical_system = DoubleWellPotentialSystem(dim, mass, mu, kappa)
+    acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
     tolerance = 1.0e-5
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance

@@ -248,3 +248,50 @@ class RelativisticChargedParticleSystem(DynamicalSystem):
                 + (u0 * self.E_electric + np.cross(velocity, self.B_magnetic)).tolist()
             )
         )
+
+
+class DoubleWellPotentialSystem(DynamicalSystem):
+    """Rotationally invariant double well potential in d dimensions
+
+    The Lagrangian of a particle with mass m is given by
+
+      L(x,u) = m/2*|u|^2 - V(x)
+
+    where the potential has the form
+
+      V(x) = -mu/2*|x|^2 + kappa/4*|x|^4.
+
+    Both position x and velocity u are d-dimensional vector.
+    This results in the acceleration
+
+      du_j/dt = mu/m*x_j - kappa/m*|x|^2*x_j
+
+    :arg dim: dimension
+    :arg mass: particle mass m
+    :arg mu: coefficient of the quadratic term, should be positive
+    :arg kappa: coefficient of the quartic term, should be positive
+    """
+
+    def __init__(self, dim, mass=1.0, mu=1.0, kappa=1.0):
+        self.dim = int(dim)
+        self.mass = float(mass)
+        self.mu = float(mu)
+        self.kappa = float(kappa)
+        assert self.mu > 0
+        assert self.kappa > 0
+        self.preamble_code = "double q_sq;"
+        self.acceleration_code = f"""
+        q_sq = 0;
+        for (int j=0;j<{self.dim};++j)
+            q_sq += q[j]*q[j];
+        for (int j=0;j<{self.dim};++j)
+            acceleration[j] = (({self.mu}) - ({self.kappa})*q_sq)/({self.mass})*q[j];
+        """
+
+    def call(self, y):
+        """Return the acceleration du_j/dt = mu/m*x_j - kappa/m*|x|^2*x_j
+
+        :arg y: position and velocity vector y = (x^0,...,x^{d-1},u^0,...,u^{d-1})
+        """
+        q_sq = np.sum(y[: self.dim] ** 2)
+        return (self.mu - self.kappa * q_sq) / self.mass * y[: self.dim]
