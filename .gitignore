@@ -1,3 +1,6 @@
 __pycache__
 generated_code
 *.pyc
+generated_code
+events.*
+checkpoint*
