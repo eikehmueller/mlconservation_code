@@ -4,8 +4,13 @@ and coordinate shifts
 
 import pytest
 import numpy as np
+from scipy.stats import ortho_group
 from time_integrator import RK4Integrator
-from nn_models import XYModelNNLagrangian, LagrangianModel
+from nn_models import (
+    XYModelNNLagrangian,
+    DoubleWellPotentialNNLagrangian,
+    LagrangianModel,
+)
 
 
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
@@ -118,3 +123,26 @@ def test_xymodel_nn_eigenstate_shift_invariance():
     q = time_integrator.q
     print("q = ", q)
     assert np.linalg.norm(q + np.roll(q, shift=dim // 4, axis=0)) < tolerance
+
+
+@pytest.mark.parametrize("dim", [2, 4, 6, 8])
+def test_double_well_potential_lagrangian_rotation_invariance(dim):
+    """Check that the neural network Lagrangian has the same value
+    if the input vectors are rotated.
+
+
+    :arg dim: dimension of system
+    """
+    nn_lagrangian = DoubleWellPotentialNNLagrangian(dim, rotation_invariant=True)
+    # number of samples to check
+    n_samples = 4
+    # tolerance for tests
+    tolerance = 1.0e-6
+    q = np.random.uniform(size=(n_samples, dim))
+    qdot = np.random.normal(size=(n_samples, dim))
+    R_rot = ortho_group.rvs(dim)
+    X = np.concatenate([q, qdot], axis=1)
+    rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v)
+    X_rotated = np.concatenate([rotate(q), rotate(qdot)], axis=1)
+    dL = nn_lagrangian(X_rotated) - nn_lagrangian(X)
+    assert np.linalg.norm(dL) < tolerance
