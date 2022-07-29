@@ -206,6 +206,11 @@ class RelativisticChargedParticleSystem(DynamicalSystem):
     where v = (u^1,u^2,u^3) are the spatial components of the velocity and hat(B) is
     the direction of the magnetic field.
 
+    The magnetic field is always constant, but the electric field can be either constant
+    (and take on the value E_electric) or vary linearly as
+
+      E(x) = -E_electric*dot(x,E_electric/|E_electric|)
+
     :arg mass: mass m of particle
     :arg charge: charge q of paricle
     :arg E_electric: three vector of electric field
@@ -218,20 +223,77 @@ class RelativisticChargedParticleSystem(DynamicalSystem):
         charge=1.0,
         E_electric=[0.7, -1.2, 0.3],
         B_magnetic=[1.1, 0.7, 2.3],
+        constant_E_electric=True,
     ):
         super().__init__(4)
         self.mass = mass
         self.charge = charge
         self.E_electric = np.asarray(E_electric)
         self.B_magnetic = np.asarray(B_magnetic)
+        self.constant_E_electric = constant_E_electric
         Ex, Ey, Ez = E_electric
         Bx, By, Bz = B_magnetic
-        self.acceleration_code = f"""
-        acceleration[0] = ({self.charge})/({self.mass})*(({Ex})*qdot[1] + ({Ey})*qdot[2] + ({Ez})*qdot[3]);
-        acceleration[1] = ({self.charge})/({self.mass})*(qdot[0]*({Ex}) + qdot[2]*({Bz})-qdot[3]*({By}));
-        acceleration[2] = ({self.charge})/({self.mass})*(qdot[0]*({Ey}) + qdot[3]*({Bx})-qdot[1]*({Bz}));
-        acceleration[3] = ({self.charge})/({self.mass})*(qdot[0]*({Ez}) + qdot[1]*({By})-qdot[2]*({Bx}));
+        if constant_E_electric:
+            self.acceleration_code = f"""
+            acceleration[0] = ({self.charge})/({self.mass}) 
+                            * (({Ex})*qdot[1] + ({Ey})*qdot[2] + ({Ez})*qdot[3]);
+            acceleration[1] = ({self.charge})/({self.mass})
+                            * (qdot[0]*({Ex}) + qdot[2]*({Bz})-qdot[3]*({By}));
+            acceleration[2] = ({self.charge})/({self.mass})
+                            * (qdot[0]*({Ey}) + qdot[3]*({Bx})-qdot[1]*({Bz}));
+            acceleration[3] = ({self.charge})/({self.mass})
+                            * (qdot[0]*({Ez}) + qdot[1]*({By})-qdot[2]*({Bx}));
+            """
+        else:
+            self.E_nrm_inv = 1.0 / np.linalg.norm(self.E_electric)
+            self.preamble_code = "double x_E_hat;"
+            self.acceleration_code = f"""
+            x_E_hat = (q[1]*({Ex})+q[2]*({Ey})+q[3]*({Ez}))*({self.E_nrm_inv});
+            acceleration[0] = -x_E_hat*({self.charge})/({self.mass}) 
+                            * (({Ex})*qdot[1] + ({Ey})*qdot[2] + ({Ez})*qdot[3]);
+            acceleration[1] = ({self.charge})/({self.mass})
+                            * (-qdot[0]*({Ex})*x_E_hat + qdot[2]*({Bz})-qdot[3]*({By}));
+            acceleration[2] = ({self.charge})/({self.mass})
+                            * (-qdot[0]*({Ey})*x_E_hat + qdot[3]*({Bx})-qdot[1]*({Bz}));
+            acceleration[3] = ({self.charge})/({self.mass})
+                            * (-qdot[0]*({Ez})*x_E_hat + qdot[1]*({By})-qdot[2]*({Bx}));
+            """
+
+    def A_vec_func(self, q):
+        """Vector potential of electromagnetic field
+
+        Returns the contravariant vector A given by
+
+          A = (-dot(q,E),1/2*cross(q,B)) for the constant electric field
+
+        of
+
+          A = (1/(2*|E|)*dot(q,E)^2,1/2*cross(q,B)) for the constant electric field
+
+        :arg E_electric: electric field
+        :arg B_magnetic: magnetic field
         """
+        # Extract position vector
+        x, y, z = tf.unstack(q, axis=-1)[1:]
+        if self.constant_E_electric:
+            A_0 = -(
+                x * self.E_electric[0] + y * self.E_electric[1] + z * self.E_electric[2]
+            )
+        else:
+            A_0 = (
+                0.5
+                * (
+                    x * self.E_electric[0]
+                    + y * self.E_electric[1]
+                    + z * self.E_electric[2]
+                )
+                ** 2
+                / np.linalg.norm(self.E_electric)
+            )
+        A_x = 0.5 * (z * self.B_magnetic[1] - y * self.B_magnetic[2])
+        A_y = 0.5 * (x * self.B_magnetic[2] - z * self.B_magnetic[0])
+        A_z = 0.5 * (y * self.B_magnetic[0] - x * self.B_magnetic[1])
+        return tf.stack([A_0, A_x, A_y, A_z], axis=-1)
 
     def call(self, y):
         """Return the acceleration
@@ -240,14 +302,28 @@ class RelativisticChargedParticleSystem(DynamicalSystem):
         """
         u0 = y[4]
         velocity = y[5:8]
-        return (
-            self.charge
-            / self.mass
-            * np.asarray(
-                [np.dot(velocity, self.E_electric)]
-                + (u0 * self.E_electric + np.cross(velocity, self.B_magnetic)).tolist()
+        position = y[1:4]
+        if self.constant_E_electric:
+            return (
+                self.charge
+                / self.mass
+                * np.asarray(
+                    [np.dot(velocity, self.E_electric)]
+                    + (
+                        u0 * self.E_electric + np.cross(velocity, self.B_magnetic)
+                    ).tolist()
+                )
             )
-        )
+        else:
+            E = -self.E_electric * np.dot(position, self.E_electric) * self.E_nrm_inv
+            return (
+                self.charge
+                / self.mass
+                * np.asarray(
+                    [np.dot(velocity, E)]
+                    + (u0 * E + np.cross(velocity, self.B_magnetic)).tolist()
+                )
+            )
 
 
 class DoubleWellPotentialSystem(DynamicalSystem):

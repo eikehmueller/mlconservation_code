@@ -38,11 +38,19 @@ def double_pendulum_system():
 
 
 @pytest.fixture
-def relativistic_charged_particle_system():
+def relativistic_charged_particle_system_varying_E():
     """Construct relativistic charged particle system object"""
     mass = 0.87
     charge = 1.1
-    return RelativisticChargedParticleSystem(mass, charge)
+    return RelativisticChargedParticleSystem(mass, charge, constant_E_electric=False)
+
+
+@pytest.fixture
+def relativistic_charged_particle_system_constant_E():
+    """Construct relativistic charged particle system object"""
+    mass = 0.87
+    charge = 1.1
+    return RelativisticChargedParticleSystem(mass, charge, constant_E_electric=True)
 
 
 @pytest.fixture
@@ -60,7 +68,8 @@ def double_well_potential_system():
         "harmonic_oscillator_system",
         "xy_model_system",
         "double_pendulum_system",
-        "relativistic_charged_particle_system",
+        "relativistic_charged_particle_system_constant_E",
+        "relativistic_charged_particle_system_varying_E",
         "double_well_potential_system",
     ]
 )

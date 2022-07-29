@@ -135,7 +135,8 @@ def test_double_pendulum_acceleration():
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
-def test_relativistic_charged_particle_acceleration():
+@pytest.mark.parametrize("constant_E_electric", [True, False])
+def test_relativistic_charged_particle_acceleration(constant_E_electric):
     """Check that the acceleration is correct for the relativistic particle
     moving in a constant electromagnetic field.
 
@@ -145,37 +146,18 @@ def test_relativistic_charged_particle_acceleration():
     E_electric = [0.8, 1.3, 0.3]
     B_magnetic = [0.3, 1.1, -0.8]
 
-    def A_vec_func(q):
-        """Vector potential of constant electromagnetic field
-
-        Returns the contravariant vector A given by
-
-        A = (dot(q,E),1/2*cross(q,B))
-
-        :arg E_electric: electric field
-        :arg B_magnetic: magnetic field
-        """
-        # Extract position vector
-        x, y, z = tf.unstack(q, axis=-1)[1:]
-        A_0 = -(x * E_electric[0] + y * E_electric[1] + z * E_electric[2])
-        A_x = 0.5 * (z * B_magnetic[1] - y * B_magnetic[2])
-        A_y = 0.5 * (x * B_magnetic[2] - z * B_magnetic[0])
-        A_z = 0.5 * (y * B_magnetic[0] - x * B_magnetic[1])
-        return tf.stack([A_0, A_x, A_y, A_z], axis=-1)
-
     np.random.seed(2141517)
     mass = 1.2
     charge = 0.864
+    dynamical_system = RelativisticChargedParticleSystem(
+        mass, charge, E_electric, B_magnetic, constant_E_electric=constant_E_electric
+    )
     lagrangian = RelativisticChargedParticleLagrangian(mass, charge)
     lagrangian_dynamical_system = RelativisticChargedParticleLagrangianDynamicalSystem(
-        lagrangian, A_vec_func
+        lagrangian, dynamical_system.A_vec_func
     )
     q_qdot = tf.constant(np.random.normal(size=[1, 8]), dtype=tf.float32)
-
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
-    dynamical_system = RelativisticChargedParticleSystem(
-        mass, charge, E_electric, B_magnetic
-    )
     acc = dynamical_system.call(np.reshape(q_qdot, [8]))
     tolerance = 1.0e-5
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
