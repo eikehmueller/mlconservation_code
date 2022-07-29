@@ -78,7 +78,7 @@ def dynamical_system(request):
 
 
 @pytest.mark.parametrize("TimeIntegratorCls", [ForwardEulerIntegrator, RK4Integrator])
-def test_time_integrator_euler(TimeIntegratorCls, dynamical_system):
+def test_time_integrator(TimeIntegratorCls, dynamical_system):
     """Check that the time integrators gives the same results
     if the generated C-code is used."""
     dt = 0.1  # timestep size
