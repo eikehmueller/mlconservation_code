@@ -19,17 +19,30 @@ class DataGenerator(object):
     with a given standard deviation sigma.
     """
 
-    def __init__(self, dynamical_system, initializer, re_initialize=True, sigma=0.1):
+    def __init__(
+        self,
+        dynamical_system,
+        initializer,
+        re_initialize=False,
+        sigma=0.1,
+        dt=0.01,
+        tinterval=0.1,
+    ):
         """Construct a new instance
 
         :arg dynamical_system: dynamical system used for training
         :arg initializer: Class which returns a (random) state (q,qdot) in phase space
         :arg sigma: standard deviation of Gaussian noise
+        :arg dt: timestep in integrator
+        :arg tinterval: time interval used for sampling if re_initialise is set to False
         """
         self.dynamical_system = dynamical_system
         self.initializer = initializer
         self.re_initialize = re_initialize
         self.sigma = sigma
+        self.dt = dt
+        self.tinterval = tinterval
+
         self.dataset = tf.data.Dataset.from_generator(
             self._generator,
             output_signature=(
@@ -54,11 +67,9 @@ class DataGenerator(object):
                 dy = self.sigma * np.random.normal(size=dim)
                 yield (X + dX, y + dy)
         else:
-            dt = 0.02
-            Tinterval = 2.0
-            n_steps = int(Tinterval / dt)
+            n_steps = int(self.tinterval / self.dt)
             q, qdot = self.initializer.draw()
-            time_integrator = RK4Integrator(self.dynamical_system, dt)
+            time_integrator = RK4Integrator(self.dynamical_system, self.dt)
             time_integrator.set_state(q, qdot)
             while True:
                 time_integrator.integrate(n_steps)
