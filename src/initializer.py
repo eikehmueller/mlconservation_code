@@ -19,7 +19,7 @@ class XYModelRandomInitializer(object):
 
 
 class XYModelConstantInitializer(object):
-    """Random initialiser class for the XY model"""
+    """Constant initialiser class for the XY model"""
 
     def __init__(self, dim):
         self.dim = dim
@@ -27,9 +27,10 @@ class XYModelConstantInitializer(object):
     def draw(self):
         """Draw a new sample with
 
-        q_j ~ Uniform(-pi,+pi)
-        qdot_j ~ Normal(0,1)
+        q_j = 0
+        qdot_j = j/d
         """
+
         q = np.zeros(self.dim)
         qdot = np.arange(0, self.dim) / self.dim
         return q, qdot
