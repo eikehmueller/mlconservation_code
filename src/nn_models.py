@@ -155,6 +155,68 @@ class XYModelNNLagrangian(NNLagrangian):
         return tf.reduce_sum(tf.stack(grad_L[self.dim :], axis=1), axis=1)
 
 
+class DoubleWellPotentialNNLagrangian(NNLagrangian):
+    """Neural network representation of Lagrangian for the double well potential
+
+    :arg dim: dimension d = number of spins
+    :arg rotation_invariant: enforce rotational invariance
+    """
+
+    def __init__(self, dim, rotation_invariant=True, **kwargs):
+        super(DoubleWellPotentialNNLagrangian, self).__init__(**kwargs)
+        self.dim = dim
+        self.rotation_invariant = rotation_invariant
+        self.dense_layers = [
+            tf.keras.layers.Dense(8, activation="tanh"),
+            tf.keras.layers.Dense(8, activation="tanh"),
+            tf.keras.layers.Dense(1, use_bias=False),
+        ]
+
+    def call(self, inputs):
+        """Evaluate the Lagrangian for a given vector (q,qdot)
+
+        :arg inputs: 2d-dimensional phase space vector (q,qdot)
+        """
+        if self.rotation_invariant:
+            q_qdot = tf.unstack(inputs, axis=-1)
+            # Extract q and qdot
+            q = tf.stack(q_qdot[: self.dim], axis=-1)
+            qdot = tf.stack(q_qdot[self.dim :], axis=-1)
+            # Construct invariant quantities and combine them into a tensor
+            x = tf.stack(
+                [
+                    tf.reduce_sum(tf.multiply(*pair), axis=-1)
+                    for pair in [[q, q], [q, qdot], [qdot, qdot]]
+                ],
+                axis=-1,
+            )
+        else:
+            x = inputs
+        for layer in self.dense_layers:
+            x = layer(x)
+        return x
+
+    def get_config(self):
+        """Get the model configuration"""
+        return {"dim": self.dim, "rotation_invariant": self.rotation_invariant}
+
+    @tf.function
+    def invariant(self, inputs):
+        """compute the dim*(dim-1)/2 angular momenta that are invariant under rotations"""
+        if len(inputs.shape) < 2:
+            inputs = tf.reshape(inputs, shape=[1, 2 * self.dim])
+        angular_momentum = []
+        q_qdot = tf.unstack(inputs, axis=-1)
+        grad_L = tf.unstack(tf.gradients(self.call(inputs), inputs)[0], axis=-1)
+        for j in range(self.dim):
+            for k in range(j + 1, self.dim):
+                angular_momentum.append(
+                    tf.multiply(grad_L[self.dim + j], q_qdot[k])
+                    - tf.multiply(grad_L[self.dim + k], q_qdot[j])
+                )
+        return angular_momentum
+
+
 class LagrangianModel(tf.keras.models.Model):
     """Neural network for representing the mapping from the current
     state (q,qdot) to the acceleration, assuming that the
