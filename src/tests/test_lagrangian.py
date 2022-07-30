@@ -39,6 +39,7 @@ def test_harmonic_oscillator_lagrangian(dim):
 
     :arg dim: dimension of state space
     """
+    np.random.seed(2141517)
     M_mat, A_mat = harmonic_oscillator_matrices(dim)
     lagrangian = HarmonicOscillatorLagrangian(dim, M_mat, A_mat)
     q = np.random.normal(size=dim)
@@ -63,6 +64,7 @@ def test_harmonic_oscillator_acceleration(dim):
 
     :arg dim: dimension of state space
     """
+    np.random.seed(2141537)
     M_mat, A_mat = harmonic_oscillator_matrices(dim)
     lagrangian = HarmonicOscillatorLagrangian(dim, M_mat, A_mat)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
@@ -81,6 +83,7 @@ def test_xy_model_lagrangian(dim):
 
     :arg dim: dimension of state space
     """
+    np.random.seed(2141517)
     lagrangian = XYModelLagrangian(dim)
     q = np.random.normal(size=dim)
     qdot = np.random.normal(size=dim)
@@ -103,6 +106,7 @@ def test_xy_model_acceleration(dim):
 
     :arg dim: dimension of state space
     """
+    np.random.seed(2141517)
     lagrangian = XYModelLagrangian(dim)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
     q_qdot = tf.constant(np.random.normal(size=(1, 2 * dim)), dtype=tf.float32)
@@ -121,6 +125,7 @@ def test_double_pendulum_acceleration():
 
     :arg dim: dimension of state space
     """
+    np.random.seed(2141517)
     m0 = 0.9
     m1 = 1.1
     L0 = 1.3
@@ -142,11 +147,9 @@ def test_relativistic_charged_particle_acceleration(constant_E_electric):
 
     Evaluate this for a random phase space vector (q,qdot)
     """
-
+    np.random.seed(2141517)
     E_electric = [0.8, 1.3, 0.3]
     B_magnetic = [0.3, 1.1, -0.8]
-
-    np.random.seed(2141517)
     mass = 1.2
     charge = 0.864
     dynamical_system = RelativisticChargedParticleSystem(
@@ -171,6 +174,7 @@ def test_double_well_potential_acceleration(dim):
 
     :arg dim: dimension of state space
     """
+    np.random.seed(2141517)
     mass = 1.2
     mu = 0.97
     kappa = 1.08
