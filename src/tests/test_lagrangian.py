@@ -72,7 +72,7 @@ def test_harmonic_oscillator_acceleration(dim):
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = HarmonicOscillatorSystem(dim, M_mat, A_mat)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-4
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
