@@ -8,6 +8,7 @@ from lagrangian import (
     DoublePendulumLagrangian,
     RelativisticChargedParticleLagrangian,
     DoubleWellPotentialLagrangian,
+    TwoParticleLagrangian,
 )
 from dynamical_system import (
     DoubleWellPotentialSystem,
@@ -16,6 +17,7 @@ from dynamical_system import (
     XYModelSystem,
     DoublePendulumSystem,
     DoubleWellPotentialSystem,
+    TwoParticleSystem,
 )
 from lagrangian_dynamical_system import (
     LagrangianDynamicalSystem,
@@ -183,6 +185,30 @@ def test_double_well_potential_acceleration(dim):
     q_qdot = tf.constant(np.random.normal(size=(1, 2 * dim)), dtype=tf.float32)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = DoubleWellPotentialSystem(dim, mass, mu, kappa)
+    acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
+    tolerance = 1.0e-5
+    assert np.linalg.norm(lagrangian_acc - acc) < tolerance
+
+
+@pytest.mark.parametrize("dim_space", [1, 2, 3, 4, 5, 6])
+def test_two_particle_acceleration(dim_space):
+    """Check that the acceleration is correct for the two particle Lagrangian.
+
+    Evaluate this for a random phase space vector (q,qdot)
+
+    :arg dim_space: dimension of state space
+    """
+    np.random.seed(13125127)
+    mass1 = 1.2
+    mass2 = 0.98
+    mu = 0.97
+    kappa = 1.08
+    dim = 2 * dim_space
+    lagrangian = TwoParticleLagrangian(dim_space, mass1, mass2, mu, kappa)
+    lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
+    q_qdot = tf.constant(np.random.normal(size=(1, 2 * dim)), dtype=tf.float32)
+    lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
+    dynamical_system = TwoParticleSystem(dim_space, mass1, mass2, mu, kappa)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
     tolerance = 1.0e-5
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance

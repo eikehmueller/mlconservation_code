@@ -373,3 +373,61 @@ class DoubleWellPotentialSystem(DynamicalSystem):
         """
         q_sq = np.sum(y[: self.dim] ** 2)
         return (self.mu - self.kappa * q_sq) / self.mass * y[: self.dim]
+
+
+class TwoParticleSystem(DynamicalSystem):
+    """Two d-dimensional particles interacting via a quartic potential
+
+    If x1, x2 are the particle positions and u1, u2 are their velocities, then their
+    Lagrangian is given by
+
+      L(x,u) = m1/2*|u1|^2 + m2/2*|u2|^2- V(x1,x2)
+
+    where the potential has the form
+
+      V(x) = -mu/2*|x|^2 + kappa/4*|x|^4.
+
+    Note that the Lagrangian is invariant under rotations and translations
+    This results in the accelerations
+
+      du1_j/dt = (mu - kappa*|x1-x2|^2)*(x1_j-x2_j)
+      du2_j/dt = (mu - kappa*|x1-x2|^2)*(x2_j-x1_j) = -du1_j/dt
+
+    :arg dim_space: dimension of space (note that this is *half* the phase space dimension)
+    :arg mass1: Mass m1 of first particle
+    :arg mass2: Mass m2 of second particle
+    :arg mu: coefficient of the quadratic term, should be positive
+    :arg kappa: coefficient of the quartic term, should be positive
+    """
+
+    def __init__(self, dim_space, mass1=1.0, mass2=1.0, mu=1.0, kappa=1.0):
+        super().__init__(2 * dim_space)
+        self.mass1 = float(mass1)
+        self.mass2 = float(mass2)
+        self.mu = float(mu)
+        self.kappa = float(kappa)
+        assert self.mu > 0
+        assert self.kappa > 0
+        self.preamble_code = "double dq_sq;"
+        self.acceleration_code = f"""
+        dq_sq = 0;
+        for (int j=0;j<{self.dim}/2;++j)
+            dq_sq += (q[j]-q[{self.dim}/2+j])*(q[j]-q[{self.dim}/2+j]);
+        for (int j=0;j<{self.dim}/2;++j) {{
+            double force = (({self.mu}) - ({self.kappa})*dq_sq)*(q[j]-q[{self.dim}/2+j]);
+            acceleration[j] = force/({self.mass1});
+            acceleration[{self.dim}/2+j] = -force/({self.mass2});
+        }}
+        """
+
+    def call(self, y):
+        """Return the acceleratio
+
+        :arg y: position and velocity vector
+                y = (x1^0,...,x1^{d-1},x2^0,...,x2^{d-1},u1^0,...,u1^{d-1},u2^0,...,u2^{d-1})
+        """
+        dq_sq = np.sum((y[0 : self.dim // 2] - y[self.dim // 2 : self.dim]) ** 2)
+        force = (self.mu - self.kappa * dq_sq) * (
+            y[0 : self.dim // 2] - y[self.dim // 2 : self.dim]
+        )
+        return np.concatenate([force / self.mass1, -force / self.mass2])

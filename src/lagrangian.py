@@ -209,3 +209,49 @@ class DoubleWellPotentialLagrangian(Lagrangian):
             + 0.5 * self.mu * x_sq
             - 0.25 * self.kappa * x_sq**2
         )
+
+
+class TwoParticleLagrangian(Lagrangian):
+    """Implements the Lagrangian of two interacting particles
+
+      L(x,u) = m1/2*|u1|^2 + m2/2*|u2|^2- V(x1,x2)
+
+    where the potential has the form
+
+      V(x) = -mu/2*|x|^2 + kappa/4*|x|^4.
+
+    Positions x1, x2 and velocities u1, u2 are d-dimensional vectors
+
+    :arg dim_space: dimension d of system
+    :arg mass: particle mass m
+    :arg mu: coefficient of quadratic term, should be positive
+    :arg kappa: coefficient of quartic term, should be positive
+    """
+
+    def __init__(self, dim_space, mass1=1.0, mass2=1.0, mu=1.0, kappa=1.0):
+        super().__init__(2 * dim_space)
+        self.mass1 = float(mass1)
+        self.mass2 = float(mass2)
+        self.mu = float(mu)
+        assert self.mu > 0, "coefficient of quadratic term must be positive"
+        self.kappa = float(kappa)
+        assert self.kappa > 0, "coefficient of quartic term must be positive"
+        assert self.mu > 0
+        assert self.kappa > 0
+
+    def __call__(self, inputs):
+        # Extract position and velocity
+        x_u = tf.unstack(inputs, axis=1)
+        x1 = tf.stack(x_u[0 : self.dim // 2], axis=1)
+        x2 = tf.stack(x_u[self.dim // 2 : self.dim], axis=1)
+        u1 = tf.stack(x_u[self.dim : 3 * self.dim // 2], axis=1)
+        u2 = tf.stack(x_u[3 * self.dim // 2 : 2 * self.dim], axis=1)
+        u1_sq = tf.reduce_sum(tf.multiply(u1, u1), axis=1)
+        u2_sq = tf.reduce_sum(tf.multiply(u2, u2), axis=1)
+        dx_sq = tf.reduce_sum(tf.multiply(x1 - x2, x1 - x2), axis=1)
+        return (
+            0.5 * self.mass1 * u1_sq
+            + 0.5 * self.mass2 * u2_sq
+            + 0.5 * self.mu * dx_sq
+            - 0.25 * self.kappa * dx_sq**2
+        )
