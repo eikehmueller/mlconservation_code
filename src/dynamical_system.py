@@ -79,11 +79,13 @@ class XYModelSystem(DynamicalSystem):
         self.a_lat = 1.0 / self.dim
         # Generate the C-code used for the acceleration update
         a_lat_inv2 = 1.0 / self.a_lat**2
-        self.acceleration_code = f"for (int j=0;j<{self.dim:d};++j)" + "{\n"
-        self.acceleration_code += f"  acceleration[j] = -{a_lat_inv2:f} * ("
-        self.acceleration_code += f"sin(q[j]-q[(j+{self.dim:d}-1)%{self.dim:d}])"
-        self.acceleration_code += f"+sin(q[j]-q[(j+1)%{self.dim:d}])" + ");\n"
-        self.acceleration_code += "}"
+        self.acceleration_code = f"""
+        for (int j=0;j<{self.dim:d};++j) {{
+          acceleration[j] = -{a_lat_inv2:f} * (
+              sin(q[j]-q[(j+{self.dim:d}-1)%{self.dim:d}]) 
+            + sin(q[j]-q[(j+1)%{self.dim:d}])
+            );
+        }}"""
         self.header_code = "#include <math.h>"
 
     def call(self, y):
