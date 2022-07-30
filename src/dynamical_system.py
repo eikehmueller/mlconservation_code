@@ -13,7 +13,7 @@ class DynamicalSystem(ABC):
 
         :arg dim: dimension of state space. Note that
         """
-        self.dim = dim
+        self.dim = int(dim)
 
     @abstractmethod
     def call(self, y):
