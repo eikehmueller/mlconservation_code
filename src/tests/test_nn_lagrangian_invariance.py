@@ -9,6 +9,7 @@ from time_integrator import RK4Integrator
 from nn_models import (
     XYModelNNLagrangian,
     DoubleWellPotentialNNLagrangian,
+    TwoParticleNNLagrangian,
     LagrangianModel,
 )
 
@@ -145,4 +146,43 @@ def test_double_well_potential_lagrangian_rotation_invariance(dim):
     rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v)
     X_rotated = np.concatenate([rotate(q), rotate(qdot)], axis=1)
     dL = nn_lagrangian(X_rotated) - nn_lagrangian(X)
+    assert np.linalg.norm(dL) < tolerance
+
+
+@pytest.mark.parametrize("dim_space", [2, 3, 4])
+@pytest.mark.parametrize("rotation_invariant", [False, True])
+@pytest.mark.parametrize("translation_invariant", [False, True])
+def test_two_particle_lagrangian_invariance(
+    dim_space, rotation_invariant, translation_invariant
+):
+    """Check that the neural network Lagrangian has the same value
+    if the input vectors are rotated or translated.
+
+    :arg dim_space: dimension of space
+    :arg rotation_invariant: test rotation invariance
+    :arg translation_invariant: test translation invariance
+    """
+    np.random.seed(214157)
+    nn_lagrangian = TwoParticleNNLagrangian(
+        dim_space,
+        rotation_invariant=rotation_invariant,
+        translation_invariant=translation_invariant,
+    )
+    # number of samples to check
+    n_samples = 4
+    # tolerance for tests
+    tolerance = 1.0e-5
+    x1 = np.random.normal(size=(n_samples, dim_space))
+    x2 = np.random.normal(size=(n_samples, dim_space))
+    u1 = np.random.normal(size=(n_samples, dim_space))
+    u2 = np.random.normal(size=(n_samples, dim_space))
+    R_rot = ortho_group.rvs(dim_space)
+    offset = np.random.normal(size=dim_space)
+    X = np.concatenate([x1, x2, u1, u2], axis=1)
+    rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v) if rotation_invariant else v
+    translate = lambda v: v + offset if translation_invariant else v
+    X_transformed = np.concatenate(
+        [rotate(translate(x1)), rotate(translate(x2)), rotate(u1), rotate(u2)], axis=1
+    )
+    dL = nn_lagrangian(X_transformed) - nn_lagrangian(X)
     assert np.linalg.norm(dL) < tolerance

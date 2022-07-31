@@ -218,6 +218,78 @@ class DoubleWellPotentialNNLagrangian(NNLagrangian):
         return angular_momentum
 
 
+class TwoParticleNNLagrangian(NNLagrangian):
+    """Neural network representation of Lagrangian for the two particle system
+
+    :arg dim_space: dimension of the space
+    :arg rotation_invariant: enforce rotational invariance
+    :arg translation_invariant: enforce translational invariance?
+    """
+
+    def __init__(
+        self, dim_space, rotation_invariant=True, translation_invariant=True, **kwargs
+    ):
+        super(TwoParticleNNLagrangian, self).__init__(**kwargs)
+        self.dim = 2 * dim_space
+        self.rotation_invariant = rotation_invariant
+        self.translation_invariant = translation_invariant
+        self.dense_layers = [
+            tf.keras.layers.Dense(64, activation="softplus"),
+            tf.keras.layers.Dense(64, activation="softplus"),
+            tf.keras.layers.Dense(1, use_bias=False),
+        ]
+
+    def call(self, inputs):
+        """Evaluate the Lagrangian for a given vector (q,qdot)
+
+        :arg inputs: 2d-dimensional phase space vector (q,qdot)
+        """
+        if self.rotation_invariant:
+            q_qdot = tf.unstack(inputs, axis=-1)
+            # Extract q and qdot
+            x1 = tf.stack(q_qdot[0 : self.dim // 2], axis=-1)
+            x2 = tf.stack(q_qdot[self.dim // 2 : self.dim], axis=-1)
+            u1 = tf.stack(q_qdot[self.dim : 3 * self.dim // 2], axis=-1)
+            u2 = tf.stack(q_qdot[3 * self.dim // 2 : 2 * self.dim], axis=-1)
+            if self.translation_invariant:
+                # In the translation-invariant case only x1-x2 is allowed
+                dynamic_variables = [x1 - x2, u1, u2]
+            else:
+                dynamic_variables = [x1, x2, u1, u2]
+            # Construct invariant quantities and combine them into a tensor
+            x = tf.stack(
+                [
+                    tf.reduce_sum(tf.multiply(*pair), axis=-1)
+                    for pair in list(
+                        combinations_with_replacement(dynamic_variables, 2)
+                    )
+                ],
+                axis=-1,
+            )
+        else:
+            if self.translation_invariant:
+                # Construct dx = x1 - x2
+                q_qdot = tf.unstack(inputs, axis=-1)
+                dx = [
+                    q_qdot[j] - q_qdot[self.dim // 2 + j] for j in range(self.dim // 2)
+                ]
+                u = q_qdot[self.dim : 2 * self.dim // 2]
+                x = tf.stack(dx + u)
+            else:
+                x = inputs
+        for layer in self.dense_layers:
+            x = layer(x)
+        return x
+
+    def get_config(self):
+        """Get the model configuration"""
+        return {
+            "dim": self.dim,
+            "rotation_invariant": self.rotation_invariant,
+            "translation_invariant": self.translation_invariant,
+        }
+
+
 class LagrangianModel(tf.keras.models.Model):
     """Neural network for representing the mapping from the current
     state (q,qdot) to the acceleration, assuming that the
