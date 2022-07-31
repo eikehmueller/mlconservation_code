@@ -168,8 +168,8 @@ class DoubleWellPotentialNNLagrangian(NNLagrangian):
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.dense_layers = [
-            tf.keras.layers.Dense(8, activation="tanh"),
-            tf.keras.layers.Dense(8, activation="tanh"),
+            tf.keras.layers.Dense(64, activation="softplus"),
+            tf.keras.layers.Dense(64, activation="softplus"),
             tf.keras.layers.Dense(1, use_bias=False),
         ]
 
