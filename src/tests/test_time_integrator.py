@@ -9,7 +9,7 @@ from dynamical_system import (
     DoubleWellPotentialSystem,
     TwoParticleSystem,
 )
-from common import harmonic_oscillator_matrices
+from common import harmonic_oscillator_matrices, random_seed
 from time_integrator import ForwardEulerIntegrator, RK4Integrator
 
 
@@ -91,9 +91,10 @@ def dynamical_system(request):
 
 
 @pytest.mark.parametrize("TimeIntegratorCls", [ForwardEulerIntegrator, RK4Integrator])
-def test_time_integrator(TimeIntegratorCls, dynamical_system):
+def test_time_integrator(random_seed, TimeIntegratorCls, dynamical_system):
     """Check that the time integrators gives the same results
     if the generated C-code is used."""
+    np.random.seed(random_seed)
     dt = 0.1  # timestep size
     nsteps = 10  # number of timesteps
     dim = dynamical_system.dim

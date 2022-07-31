@@ -23,7 +23,7 @@ from lagrangian_dynamical_system import (
     LagrangianDynamicalSystem,
     RelativisticChargedParticleLagrangianDynamicalSystem,
 )
-from common import harmonic_oscillator_matrices
+from common import harmonic_oscillator_matrices, random_seed
 
 """Tests for the Lagrangian and dynamical system.
 
@@ -35,13 +35,13 @@ acceleration with the corresponding function of the dynamical system class.
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_harmonic_oscillator_lagrangian(dim):
+def test_harmonic_oscillator_lagrangian(random_seed, dim):
     """Check that the Harmonic Oscillator Lagrangian is computer correctly
     by comparing to a manual calculation.
 
     :arg dim: dimension of state space
     """
-    np.random.seed(2141517)
+    np.random.seed(random_seed)
     M_mat, A_mat = harmonic_oscillator_matrices(dim)
     lagrangian = HarmonicOscillatorLagrangian(dim, M_mat, A_mat)
     q = np.random.normal(size=dim)
@@ -56,7 +56,7 @@ def test_harmonic_oscillator_lagrangian(dim):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_harmonic_oscillator_acceleration(dim):
+def test_harmonic_oscillator_acceleration(random_seed, dim):
     """Check that the acceleration is correct for the Harmonic Oscillator
     Lagrangian. Not that in this case we have that
 
@@ -66,7 +66,7 @@ def test_harmonic_oscillator_acceleration(dim):
 
     :arg dim: dimension of state space
     """
-    np.random.seed(2141537)
+    np.random.seed(random_seed)
     M_mat, A_mat = harmonic_oscillator_matrices(dim)
     lagrangian = HarmonicOscillatorLagrangian(dim, M_mat, A_mat)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
@@ -79,13 +79,13 @@ def test_harmonic_oscillator_acceleration(dim):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_xy_model_lagrangian(dim):
+def test_xy_model_lagrangian(random_seed, dim):
     """Check that the Lagrangian of the XY model is computed correctly
     by comparing to a manual calculation.
 
     :arg dim: dimension of state space
     """
-    np.random.seed(2141517)
+    np.random.seed(random_seed)
     lagrangian = XYModelLagrangian(dim)
     q = np.random.normal(size=dim)
     qdot = np.random.normal(size=dim)
@@ -100,7 +100,7 @@ def test_xy_model_lagrangian(dim):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_xy_model_acceleration(dim):
+def test_xy_model_acceleration(random_seed, dim):
     """Check that the acceleration is correct for the XY Model
     Lagrangian.
 
@@ -108,7 +108,7 @@ def test_xy_model_acceleration(dim):
 
     :arg dim: dimension of state space
     """
-    np.random.seed(2141517)
+    np.random.seed(random_seed)
     lagrangian = XYModelLagrangian(dim)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
     q_qdot = tf.constant(np.random.normal(size=(1, 2 * dim)), dtype=tf.float32)
@@ -119,7 +119,7 @@ def test_xy_model_acceleration(dim):
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
-def test_double_pendulum_acceleration():
+def test_double_pendulum_acceleration(random_seed):
     """Check that the acceleration is correct for the double pendulum
     Lagrangian.
 
@@ -127,7 +127,7 @@ def test_double_pendulum_acceleration():
 
     :arg dim: dimension of state space
     """
-    np.random.seed(2141517)
+    np.random.seed(random_seed)
     m0 = 0.9
     m1 = 1.1
     L0 = 1.3
@@ -143,13 +143,13 @@ def test_double_pendulum_acceleration():
 
 
 @pytest.mark.parametrize("constant_E_electric", [True, False])
-def test_relativistic_charged_particle_acceleration(constant_E_electric):
+def test_relativistic_charged_particle_acceleration(random_seed, constant_E_electric):
     """Check that the acceleration is correct for the relativistic particle
     moving in a constant electromagnetic field.
 
     Evaluate this for a random phase space vector (q,qdot)
     """
-    np.random.seed(2141517)
+    np.random.seed(random_seed)
     E_electric = [0.8, 1.3, 0.3]
     B_magnetic = [0.3, 1.1, -0.8]
     mass = 1.2
@@ -169,14 +169,14 @@ def test_relativistic_charged_particle_acceleration(constant_E_electric):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4, 5, 6])
-def test_double_well_potential_acceleration(dim):
+def test_double_well_potential_acceleration(random_seed, dim):
     """Check that the acceleration is correct for the double well potential Lagrangian.
 
     Evaluate this for a random phase space vector (q,qdot)
 
     :arg dim: dimension of state space
     """
-    np.random.seed(2141517)
+    np.random.seed(random_seed)
     mass = 1.2
     mu = 0.97
     kappa = 1.08
@@ -191,14 +191,14 @@ def test_double_well_potential_acceleration(dim):
 
 
 @pytest.mark.parametrize("dim_space", [1, 2, 3, 4, 5, 6])
-def test_two_particle_acceleration(dim_space):
+def test_two_particle_acceleration(random_seed, dim_space):
     """Check that the acceleration is correct for the two particle Lagrangian.
 
     Evaluate this for a random phase space vector (q,qdot)
 
     :arg dim_space: dimension of state space
     """
-    np.random.seed(13125127)
+    np.random.seed(random_seed)
     mass1 = 1.2
     mass2 = 0.98
     mu = 0.97

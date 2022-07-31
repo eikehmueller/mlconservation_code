@@ -12,10 +12,11 @@ from nn_models import (
     TwoParticleNNLagrangian,
     LagrangianModel,
 )
+from common import random_seed
 
 
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
-def test_xymodel_nn_lagrangian_rotation_invariance(dim):
+def test_xymodel_nn_lagrangian_rotation_invariance(random_seed, dim):
     """Check that the neural network Lagrangian has the same value
     if all angles are shifted by a fixed amount.
 
@@ -26,6 +27,7 @@ def test_xymodel_nn_lagrangian_rotation_invariance(dim):
 
     :arg dim: dimension of system
     """
+    np.random.seed(random_seed)
     nn_lagrangian = XYModelNNLagrangian(
         dim, rotation_invariant=True, shift_invariant=True
     )
@@ -45,7 +47,7 @@ def test_xymodel_nn_lagrangian_rotation_invariance(dim):
 
 @pytest.mark.parametrize("dim", [4, 6, 8])
 @pytest.mark.parametrize("offset", [1, 2, 3])
-def test_xymodel_nn_lagrangian_shift_invariance(dim, offset):
+def test_xymodel_nn_lagrangian_shift_invariance(random_seed, dim, offset):
     """Check that the neural network Lagrangian has the same value
     if all angles are shifted by a fixed offset.
 
@@ -57,6 +59,7 @@ def test_xymodel_nn_lagrangian_shift_invariance(dim, offset):
     :arg dim: dimension of system
     :arg offset: shift offset
     """
+    np.random.seed(random_seed)
     nn_lagrangian = XYModelNNLagrangian(
         dim, rotation_invariant=True, shift_invariant=True
     )
@@ -77,7 +80,7 @@ def test_xymodel_nn_lagrangian_shift_invariance(dim, offset):
 
 
 @pytest.mark.skip(reason="too expensive")
-def test_xymodel_nn_eigenstate_shift_invariance():
+def test_xymodel_nn_eigenstate_shift_invariance(random_seed):
     """Check that that if the dynamical system is initialised with an eigenstate
     of the shift operator, the dynamics will will preserve shift invariance.
 
@@ -95,6 +98,7 @@ def test_xymodel_nn_eigenstate_shift_invariance():
 
       theta_{j+4}(t) + theta_j(t) = 0
     """
+    np.random.seed(random_seed)
     # dimension of dynamical system (number of spins)
     dim = 4
     # timestep size
@@ -127,13 +131,13 @@ def test_xymodel_nn_eigenstate_shift_invariance():
 
 
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
-def test_double_well_potential_lagrangian_rotation_invariance(dim):
+def test_double_well_potential_lagrangian_rotation_invariance(random_seed, dim):
     """Check that the neural network Lagrangian has the same value
     if the input vectors are rotated.
 
-
     :arg dim: dimension of system
     """
+    np.random.seed(random_seed)
     nn_lagrangian = DoubleWellPotentialNNLagrangian(dim, rotation_invariant=True)
     # number of samples to check
     n_samples = 4
@@ -153,7 +157,7 @@ def test_double_well_potential_lagrangian_rotation_invariance(dim):
 @pytest.mark.parametrize("rotation_invariant", [False, True])
 @pytest.mark.parametrize("translation_invariant", [False, True])
 def test_two_particle_lagrangian_invariance(
-    dim_space, rotation_invariant, translation_invariant
+    random_seed, dim_space, rotation_invariant, translation_invariant
 ):
     """Check that the neural network Lagrangian has the same value
     if the input vectors are rotated or translated.
@@ -162,7 +166,7 @@ def test_two_particle_lagrangian_invariance(
     :arg rotation_invariant: test rotation invariance
     :arg translation_invariant: test translation invariance
     """
-    np.random.seed(214157)
+    np.random.seed(random_seed)
     nn_lagrangian = TwoParticleNNLagrangian(
         dim_space,
         rotation_invariant=rotation_invariant,
