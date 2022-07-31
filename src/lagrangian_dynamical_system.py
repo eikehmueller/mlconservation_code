@@ -67,7 +67,7 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
     @tf.function
     def J_qdotqdot_inv(self, y):
         """d x d matrix (J_{dot{q},dot{q}})^{-1}"""
-        return tf.linalg.inv(self.J_qdotqdot(y))
+        return tf.linalg.pinv(self.J_qdotqdot(y))
 
     @tf.function
     def call(self, y):
@@ -185,7 +185,7 @@ class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer
     @tf.function
     def J_uu_inv(self, y):
         """4 x 4 matrix (J_{uu})^{-1}"""
-        return tf.linalg.inv(self.J_uu(y))
+        return tf.linalg.pinv(self.J_uu(y))
 
     @tf.function
     def call(self, y):
