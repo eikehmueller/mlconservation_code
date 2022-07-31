@@ -139,7 +139,7 @@ def test_double_well_potential_lagrangian_rotation_invariance(dim):
     n_samples = 4
     # tolerance for tests
     tolerance = 1.0e-6
-    q = np.random.uniform(size=(n_samples, dim))
+    q = np.random.normal(size=(n_samples, dim))
     qdot = np.random.normal(size=(n_samples, dim))
     R_rot = ortho_group.rvs(dim)
     X = np.concatenate([q, qdot], axis=1)
