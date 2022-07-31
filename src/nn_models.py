@@ -1,3 +1,4 @@
+from itertools import combinations_with_replacement
 import os
 import errno
 import json
@@ -186,7 +187,7 @@ class DoubleWellPotentialNNLagrangian(NNLagrangian):
             x = tf.stack(
                 [
                     tf.reduce_sum(tf.multiply(*pair), axis=-1)
-                    for pair in [[q, q], [q, qdot], [qdot, qdot]]
+                    for pair in combinations_with_replacement([q, qdot], 2)
                 ],
                 axis=-1,
             )
