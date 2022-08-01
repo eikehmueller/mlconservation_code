@@ -102,3 +102,43 @@ class DoubleWellPotentialConstantInitializer(object):
         qdot_j = j/d
         """
         return self.q_ref[: self.dim], self.qdot_ref[: self.dim]
+
+
+class TwoParticleConstantInitializer(object):
+    """Constant initialiser class for interacting two particle system"""
+
+    def __init__(self, dim):
+        self.dim = dim
+        assert dim <= 8, "only dimensions up to 8 are supported"
+        self.q_ref = np.asarray(
+            [
+                0.73906985,
+                -0.29971694,
+                0.31880467,
+                0.42600132,
+                -0.16290228,
+                -0.19736723,
+                0.21630599,
+                1.13949553,
+            ]
+        )
+        self.qdot_ref = np.asarray(
+            [
+                0.11062122,
+                -0.61520255,
+                1.32813101,
+                0.28267341,
+                0.8595746,
+                0.18834262,
+                0.69556394,
+                -0.13685782,
+            ]
+        )
+
+    def draw(self):
+        """Draw a new sample with
+
+        q_j = 0
+        qdot_j = j/d
+        """
+        return self.q_ref[: self.dim], 0.05 * self.qdot_ref[: self.dim]
