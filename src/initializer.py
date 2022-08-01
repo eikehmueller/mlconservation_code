@@ -36,6 +36,34 @@ class XYModelConstantInitializer(object):
         return q, qdot
 
 
+class RelativisticChargedParticleRandomInitializer(object):
+    """Random initializer for charged particle system
+
+    :arg rho: scaling-factor for three-velocity
+    """
+
+    def __init__(self, rho):
+        self.dim = 4
+        self.rho = rho
+
+    def draw(self):
+        """Draw a new sample with
+
+          q_j = 0
+          qdot_0 = 1
+          qdot_j = rho*v_j/|v|   with  rho
+
+        where v is a normal random vector. This choice guarantees that qdot^2 = 1 - rho^2 > 0
+        """
+        q = np.zeros(shape=[self.dim])
+        qdot = np.zeros(shape=[self.dim])
+        velocity = np.random.normal(size=3)
+        velocity = self.rho * velocity / np.linalg.norm(velocity)
+        qdot[0] = 1
+        qdot[1:4] = velocity
+        return q, qdot
+
+
 class DoubleWellPotentialConstantInitializer(object):
     """Constant initialiser class for the double well potential model"""
 
