@@ -105,11 +105,18 @@ class DoubleWellPotentialConstantInitializer(object):
 
 
 class TwoParticleConstantInitializer(object):
-    """Constant initialiser class for interacting two particle system"""
+    """Constant initialiser class for interacting two particle system
 
-    def __init__(self, dim):
+    :arg dim: dimension of phase space
+    :arg mass1: mass of first particle
+    :arg mass2: mass of second particle
+    """
+
+    def __init__(self, dim, mass1=1.0, mass2=1.0):
         self.dim = dim
         assert dim <= 8, "only dimensions up to 8 are supported"
+        self.mass1 = mass1
+        self.mass2 = mass2
         self.q_ref = np.asarray(
             [
                 0.73906985,
@@ -122,7 +129,7 @@ class TwoParticleConstantInitializer(object):
                 1.13949553,
             ]
         )
-        self.qdot_ref = np.asarray(
+        self.r_ref = np.asarray(
             [
                 0.11062122,
                 -0.61520255,
@@ -136,9 +143,8 @@ class TwoParticleConstantInitializer(object):
         )
 
     def draw(self):
-        """Draw a new sample with
-
-        q_j = 0
-        qdot_j = j/d
-        """
-        return self.q_ref[: self.dim], 0.05 * self.qdot_ref[: self.dim]
+        """Draw a new sample"""
+        r = self.r_ref[: self.dim // 2]
+        u1 = list(r / self.mass1)
+        u2 = list(-r / self.mass2)
+        return (self.q_ref[: self.dim], u1 + u2)
