@@ -272,10 +272,11 @@ class TwoParticleNNLagrangian(NNLagrangian):
                 # Construct dx = x1 - x2
                 q_qdot = tf.unstack(inputs, axis=-1)
                 dx = [
-                    q_qdot[j] - q_qdot[self.dim // 2 + j] for j in range(self.dim // 2)
+                    tf.math.subtract(q_qdot[j], q_qdot[self.dim_space + j])
+                    for j in range(self.dim_space)
                 ]
                 u = q_qdot[self.dim : 2 * self.dim]
-                x = tf.stack(dx + u)
+                x = tf.stack(dx + u, axis=-1)
             else:
                 x = inputs
         for layer in self.dense_layers:
