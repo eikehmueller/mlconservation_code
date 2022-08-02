@@ -230,6 +230,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
         self, dim_space, rotation_invariant=True, translation_invariant=True, **kwargs
     ):
         super(TwoParticleNNLagrangian, self).__init__(**kwargs)
+        self.dim_space = dim_space
         self.dim = 2 * dim_space
         self.rotation_invariant = rotation_invariant
         self.translation_invariant = translation_invariant
@@ -284,7 +285,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
     def get_config(self):
         """Get the model configuration"""
         return {
-            "dim": self.dim,
+            "dim_space": self.dim_space,
             "rotation_invariant": self.rotation_invariant,
             "translation_invariant": self.translation_invariant,
         }
