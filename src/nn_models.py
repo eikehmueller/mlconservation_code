@@ -274,7 +274,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
                 dx = [
                     q_qdot[j] - q_qdot[self.dim // 2 + j] for j in range(self.dim // 2)
                 ]
-                u = q_qdot[self.dim : 2 * self.dim // 2]
+                u = q_qdot[self.dim : 2 * self.dim]
                 x = tf.stack(dx + u)
             else:
                 x = inputs
