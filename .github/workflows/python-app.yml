@@ -30,6 +30,6 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
       env:
-          PYTEST_ADDOPTS: "--color=yes --ignore-warnings"
+          PYTEST_ADDOPTS: "--color=yes --disable-warnings"
       run: |
         pytest
