@@ -150,7 +150,7 @@ def test_single_particle_lagrangian_rotation_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 1.0e-6
+    tolerance = 1.0e-5
     q = np.random.normal(size=(n_samples, dim))
     qdot = np.random.normal(size=(n_samples, dim))
     if reflection_invariant:
