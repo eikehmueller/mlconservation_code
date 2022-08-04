@@ -1,4 +1,3 @@
-from itertools import combinations_with_replacement
 import os
 import errno
 import json
@@ -6,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 from auxilliary import ndarrayDecoder, ndarrayEncoder
 from lagrangian_dynamical_system import LagrangianDynamicalSystem
+from nn_layers import RotationallyInvariantLayer
 
 
 class NNLagrangian(tf.keras.layers.Layer):
@@ -164,14 +164,22 @@ class XYModelNNLagrangian(NNLagrangian):
 class DoubleWellPotentialNNLagrangian(NNLagrangian):
     """Neural network representation of Lagrangian for the double well potential
 
+    If rotation_invariant is True, invariance under rotations (i.e. the SO(d) group) is assumed.
+    If in addition reflection_invariant is True, then we also assume invariance under reflections,
+    i.e. the larger group O(d)
+
     :arg dim: dimension d = number of spins
     :arg rotation_invariant: enforce rotational invariance
+    :arg reflection_invariant: enforce invariance under reflections
     """
 
-    def __init__(self, dim, rotation_invariant=True, **kwargs):
+    def __init__(
+        self, dim, rotation_invariant=True, reflection_invariant=True, **kwargs
+    ):
         super(DoubleWellPotentialNNLagrangian, self).__init__(**kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
+        self.reflection_invariant = reflection_invariant
         self.dense_layers = [
             tf.keras.layers.Dense(64, activation="softplus"),
             tf.keras.layers.Dense(64, activation="softplus"),
@@ -184,17 +192,8 @@ class DoubleWellPotentialNNLagrangian(NNLagrangian):
         :arg inputs: 2d-dimensional phase space vector (q,qdot)
         """
         if self.rotation_invariant:
-            q_qdot = tf.unstack(inputs, axis=-1)
-            # Extract q and qdot
-            q = tf.stack(q_qdot[: self.dim], axis=-1)
-            qdot = tf.stack(q_qdot[self.dim :], axis=-1)
-            # Construct invariant quantities and combine them into a tensor
-            x = tf.stack(
-                [
-                    tf.reduce_sum(tf.multiply(*pair), axis=-1)
-                    for pair in combinations_with_replacement([q, qdot], 2)
-                ],
-                axis=-1,
+            x = RotationallyInvariantLayer(self.dim, 2, self.reflection_invariant)(
+                inputs
             )
         else:
             x = inputs
@@ -231,22 +230,33 @@ class DoubleWellPotentialNNLagrangian(NNLagrangian):
 class TwoParticleNNLagrangian(NNLagrangian):
     """Neural network representation of Lagrangian for the two particle system
 
+    If rotation_invariant is True, invariance under rotations (i.e. the SO(d) group) is assumed.
+    If in addition reflection_invariant is True, then we also assume invariance under reflections,
+    i.e. the larger group O(d)
+
     :arg dim_space: dimension of the space
     :arg rotation_invariant: enforce rotational invariance
     :arg translation_invariant: enforce translational invariance?
+    :arg reflection_invariant: enforce invariance under reflections
     """
 
     def __init__(
-        self, dim_space, rotation_invariant=True, translation_invariant=True, **kwargs
+        self,
+        dim_space,
+        rotation_invariant=True,
+        translation_invariant=True,
+        reflection_invariant=True,
+        **kwargs
     ):
         super(TwoParticleNNLagrangian, self).__init__(**kwargs)
         self.dim_space = dim_space
         self.dim = 2 * dim_space
         self.rotation_invariant = rotation_invariant
         self.translation_invariant = translation_invariant
+        self.reflection_invariant = reflection_invariant
         self.dense_layers = [
-            tf.keras.layers.Dense(64, activation="softplus"),
-            tf.keras.layers.Dense(64, activation="softplus"),
+            tf.keras.layers.Dense(128, activation="softplus"),
+            tf.keras.layers.Dense(128, activation="softplus"),
             tf.keras.layers.Dense(1, use_bias=False),
         ]
 
@@ -255,40 +265,23 @@ class TwoParticleNNLagrangian(NNLagrangian):
 
         :arg inputs: 2d-dimensional phase space vector (q,qdot)
         """
-        if self.rotation_invariant:
+        if self.translation_invariant:
+            # Construct dx = x1 - x2
             q_qdot = tf.unstack(inputs, axis=-1)
-            # Extract q and qdot
-            x1 = tf.stack(q_qdot[0 : self.dim // 2], axis=-1)
-            x2 = tf.stack(q_qdot[self.dim // 2 : self.dim], axis=-1)
-            u1 = tf.stack(q_qdot[self.dim : 3 * self.dim // 2], axis=-1)
-            u2 = tf.stack(q_qdot[3 * self.dim // 2 : 2 * self.dim], axis=-1)
-            if self.translation_invariant:
-                # In the translation-invariant case only x1-x2 is allowed
-                dynamic_variables = [x1 - x2, u1, u2]
-            else:
-                dynamic_variables = [x1, x2, u1, u2]
-            # Construct invariant quantities and combine them into a tensor
-            x = tf.stack(
-                [
-                    tf.reduce_sum(tf.multiply(*pair), axis=-1)
-                    for pair in list(
-                        combinations_with_replacement(dynamic_variables, 2)
-                    )
-                ],
-                axis=-1,
-            )
+            dx = [
+                tf.math.subtract(q_qdot[j], q_qdot[self.dim_space + j])
+                for j in range(self.dim_space)
+            ]
+            u = q_qdot[self.dim : 2 * self.dim]
+            x = tf.stack(dx + u, axis=-1)
+            n_tensors = 3
         else:
-            if self.translation_invariant:
-                # Construct dx = x1 - x2
-                q_qdot = tf.unstack(inputs, axis=-1)
-                dx = [
-                    tf.math.subtract(q_qdot[j], q_qdot[self.dim_space + j])
-                    for j in range(self.dim_space)
-                ]
-                u = q_qdot[self.dim : 2 * self.dim]
-                x = tf.stack(dx + u, axis=-1)
-            else:
-                x = inputs
+            x = inputs
+            n_tensors = 4
+        if self.rotation_invariant:
+            x = RotationallyInvariantLayer(
+                self.dim_space, n_tensors, self.reflection_invariant
+            )(x)
         for layer in self.dense_layers:
             x = layer(x)
         return x
@@ -299,6 +292,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
             "dim_space": self.dim_space,
             "rotation_invariant": self.rotation_invariant,
             "translation_invariant": self.translation_invariant,
+            "reflection_invariant": self.reflection_invariant,
         }
 
     @property

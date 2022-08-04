@@ -4,7 +4,7 @@ and coordinate shifts
 
 import pytest
 import numpy as np
-from scipy.stats import ortho_group
+from scipy.stats import ortho_group, special_ortho_group
 import os
 import sys
 
@@ -135,11 +135,15 @@ def test_xymodel_nn_eigenstate_shift_invariance(random_seed):
 
 
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
-def test_double_well_potential_lagrangian_rotation_invariance(random_seed, dim):
+@pytest.mark.parametrize("reflection_invariant", [False, True])
+def test_double_well_potential_lagrangian_rotation_invariance(
+    random_seed, dim, reflection_invariant
+):
     """Check that the neural network Lagrangian has the same value
     if the input vectors are rotated.
 
     :arg dim: dimension of system
+    :arg reflection:invariant: test reflection invariance
     """
     np.random.seed(random_seed)
     nn_lagrangian = DoubleWellPotentialNNLagrangian(dim, rotation_invariant=True)
@@ -149,7 +153,10 @@ def test_double_well_potential_lagrangian_rotation_invariance(random_seed, dim):
     tolerance = 1.0e-6
     q = np.random.normal(size=(n_samples, dim))
     qdot = np.random.normal(size=(n_samples, dim))
-    R_rot = ortho_group.rvs(dim)
+    if reflection_invariant:
+        R_rot = ortho_group.rvs(dim)
+    else:
+        R_rot = special_ortho_group.rvs(dim)
     X = np.concatenate([q, qdot], axis=1)
     rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v)
     X_rotated = np.concatenate([rotate(q), rotate(qdot)], axis=1)
@@ -160,8 +167,13 @@ def test_double_well_potential_lagrangian_rotation_invariance(random_seed, dim):
 @pytest.mark.parametrize("dim_space", [2, 3, 4])
 @pytest.mark.parametrize("rotation_invariant", [False, True])
 @pytest.mark.parametrize("translation_invariant", [False, True])
+@pytest.mark.parametrize("reflection_invariant", [False, True])
 def test_two_particle_lagrangian_invariance(
-    random_seed, dim_space, rotation_invariant, translation_invariant
+    random_seed,
+    dim_space,
+    rotation_invariant,
+    translation_invariant,
+    reflection_invariant,
 ):
     """Check that the neural network Lagrangian has the same value
     if the input vectors are rotated or translated.
@@ -169,12 +181,19 @@ def test_two_particle_lagrangian_invariance(
     :arg dim_space: dimension of space
     :arg rotation_invariant: test rotation invariance
     :arg translation_invariant: test translation invariance
+    :arg reflection_invariant: test reflection invariance
     """
+    # Reflection only makes sense if we also assume rotational invariance
+    if reflection_invariant and not rotation_invariant:
+        pytest.skip(
+            "reflection invariance only defined in context of rotational invariance"
+        )
     np.random.seed(random_seed)
     nn_lagrangian = TwoParticleNNLagrangian(
         dim_space,
         rotation_invariant=rotation_invariant,
         translation_invariant=translation_invariant,
+        reflection_invariant=reflection_invariant,
     )
     # number of samples to check
     n_samples = 4
@@ -184,7 +203,10 @@ def test_two_particle_lagrangian_invariance(
     x2 = np.random.normal(size=(n_samples, dim_space))
     u1 = np.random.normal(size=(n_samples, dim_space))
     u2 = np.random.normal(size=(n_samples, dim_space))
-    R_rot = ortho_group.rvs(dim_space)
+    if reflection_invariant:
+        R_rot = ortho_group.rvs(dim_space)
+    else:
+        R_rot = special_ortho_group.rvs(dim_space)
     offset = np.random.normal(size=dim_space)
     X = np.concatenate([x1, x2, u1, u2], axis=1)
     rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v) if rotation_invariant else v
