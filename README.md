@@ -1,5 +1,6 @@
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Automated testing](https://github.com/eikehmueller/mlconservation_code/actions/workflows/python-app.yml/badge.svg)](https://github.com/eikehmueller/mlconservation_code/actions/workflows/python-app.yml)
 
 ## Neural network solvers for differential equations with exact conservation laws
 
