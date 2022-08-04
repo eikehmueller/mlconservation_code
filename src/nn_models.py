@@ -203,7 +203,11 @@ class DoubleWellPotentialNNLagrangian(NNLagrangian):
 
     def get_config(self):
         """Get the model configuration"""
-        return {"dim": self.dim, "rotation_invariant": self.rotation_invariant}
+        return {
+            "dim": self.dim,
+            "rotation_invariant": self.rotation_invariant,
+            "reflection_invariant": reflection_invariant,
+        }
 
     @property
     def ninvariant(self):
