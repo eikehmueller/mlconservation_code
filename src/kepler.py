@@ -90,7 +90,7 @@ class KeplerSolution(object):
             * np.cos(phi - self.phi0)
         )
         phidot = self.L_angular / self.mass * u**2
-        acc = -(rddot - r * phidot**2)
+        acc = rddot - r * phidot**2
         return np.stack(
             [acc * np.cos(phi), acc * np.sin(phi), np.zeros(shape=phi.shape)], axis=0
         )
