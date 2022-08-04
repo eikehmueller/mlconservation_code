@@ -431,3 +431,44 @@ class TwoParticleSystem(DynamicalSystem):
             y[0 : self.dim // 2] - y[self.dim // 2 : self.dim]
         )
         return np.concatenate([force / self.mass1, -force / self.mass2])
+
+
+class KeplerSystem(DynamicalSystem):
+    """Motion of a particle under a 1/r central field
+
+    The acceleration is given by
+
+    du_j/dt = -alpha/m * x_j/|x|^3
+
+    Both position x and velocity u are 3-dimensional vectors.
+    This results in the acceleration
+
+    :arg mass: particle mass m
+    :arg alpha: coefficient of the 1/r term
+    """
+
+    def __init__(self, mass=1.0, alpha=1.0):
+        super(KeplerSystem, self).__init__(3)
+        self.mass = float(mass)
+        self.alpha = float(alpha)
+        assert self.mass > 0
+        assert self.alpha > 0
+        self.header_code = "#include <math.h>"
+        self.preamble_code = "double q_sq, inv_q_three_half;"
+        self.acceleration_code = f"""
+        q_sq = 0;
+        for (int j=0;j<{self.dim};++j)
+            q_sq += q[j]*q[j];
+        inv_q_three_half = 1./(q_sq*sqrt(q_sq));
+        for (int j=0;j<{self.dim};++j)
+            acceleration[j] = -({self.alpha})/({self.mass})*inv_q_three_half*q[j];
+        """
+
+    def call(self, y):
+        """Return the acceleration du_j/dt = -alpha/m*x_j/|x|^3
+
+        :arg y: position and velocity vector y = (x^0,x^1,x^2,u^0,u^1,u^2)
+        """
+        q_sq = np.sum(y[:3] ** 2)
+        inv_q_three_half = 1.0 / (q_sq * np.sqrt(q_sq))
+        return -self.alpha / self.mass * inv_q_three_half * y[:3]

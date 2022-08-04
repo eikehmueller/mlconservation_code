@@ -255,3 +255,35 @@ class TwoParticleLagrangian(Lagrangian):
             + 0.5 * self.mu * dx_sq
             - 0.25 * self.kappa * dx_sq**2
         )
+
+
+class KeplerLagrangian(Lagrangian):
+    """Implements the Lagrangian of a particle moving in a 1/r central force field
+
+      L = 1/2*m*|u|^2 - V(x)
+
+    with
+
+      V(x) = -alpha/|x|
+
+    where position x and velocity u are 3-dimensional vectors
+
+    :arg mass: particle mass m
+    :arg alpha: coefficient of 1/r term
+    """
+
+    def __init__(self, mass=1.0, alpha=1.0):
+        super().__init__(3)
+        self.mass = float(mass)
+        self.alpha = float(alpha)
+        assert self.mass > 0
+        assert self.alpha > 0
+
+    def __call__(self, inputs):
+        # Extract position and velocity
+        x_u = tf.unstack(inputs, axis=1)
+        x = tf.stack(x_u[0:3], axis=1)
+        u = tf.stack(x_u[3:6], axis=1)
+        x_sq = tf.reduce_sum(tf.multiply(x, x), axis=1)
+        u_sq = tf.reduce_sum(tf.multiply(u, u), axis=1)
+        return 0.5 * self.mass * u_sq + self.alpha / tf.sqrt(x_sq)

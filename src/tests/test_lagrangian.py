@@ -13,6 +13,7 @@ from lagrangian import (
     RelativisticChargedParticleLagrangian,
     DoubleWellPotentialLagrangian,
     TwoParticleLagrangian,
+    KeplerLagrangian,
 )
 from dynamical_system import (
     DoubleWellPotentialSystem,
@@ -22,6 +23,7 @@ from dynamical_system import (
     DoublePendulumSystem,
     DoubleWellPotentialSystem,
     TwoParticleSystem,
+    KeplerSystem,
 )
 from lagrangian_dynamical_system import (
     LagrangianDynamicalSystem,
@@ -214,5 +216,23 @@ def test_two_particle_acceleration(random_seed, dim_space):
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = TwoParticleSystem(dim_space, mass1, mass2, mu, kappa)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
+    tolerance = 1.0e-5
+    assert np.linalg.norm(lagrangian_acc - acc) < tolerance
+
+
+def test_kepler_acceleration(random_seed):
+    """Check that the acceleration is correct for the Kepler Lagramgian.
+
+    Evaluate this for a random phase space vector (q,qdot)
+    """
+    np.random.seed(random_seed)
+    mass = 1.2
+    alpha = 0.97
+    lagrangian = KeplerLagrangian(mass, alpha)
+    lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
+    q_qdot = tf.constant(np.random.normal(size=(1, 6)), dtype=tf.float32)
+    lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
+    dynamical_system = KeplerSystem(mass, alpha)
+    acc = dynamical_system.call(np.reshape(q_qdot, [6]))
     tolerance = 1.0e-5
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance

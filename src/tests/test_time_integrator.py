@@ -12,6 +12,7 @@ from dynamical_system import (
     RelativisticChargedParticleSystem,
     DoubleWellPotentialSystem,
     TwoParticleSystem,
+    KeplerSystem,
 )
 from common import harmonic_oscillator_matrices, random_seed
 from time_integrator import ForwardEulerIntegrator, RK4Integrator
@@ -79,6 +80,14 @@ def two_particle_system():
     return TwoParticleSystem(dim, mass1, mass2, mu, kappa)
 
 
+@pytest.fixture
+def kepler_system():
+    """Construct Kepler system object"""
+    mass = 0.87
+    alpha = 1.07
+    return KeplerSystem(mass, alpha)
+
+
 @pytest.fixture(
     params=[
         "harmonic_oscillator_system",
@@ -88,6 +97,7 @@ def two_particle_system():
         "relativistic_charged_particle_system_varying_E",
         "double_well_potential_system",
         "two_particle_system",
+        "kepler_system",
     ]
 )
 def dynamical_system(request):
