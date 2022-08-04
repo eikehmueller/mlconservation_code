@@ -65,7 +65,10 @@ class RelativisticChargedParticleRandomInitializer(object):
 
 
 class DoubleWellPotentialConstantInitializer(object):
-    """Constant initialiser class for the double well potential model"""
+    """Constant initialiser class for the double well potential model
+
+    :arg dim: dimension of system
+    """
 
     def __init__(self, dim):
         self.dim = dim
@@ -110,13 +113,15 @@ class TwoParticleConstantInitializer(object):
     :arg dim: dimension of phase space
     :arg mass1: mass of first particle
     :arg mass2: mass of second particle
+    :arg perturbation: size of perturbation to be added to initial vector
     """
 
-    def __init__(self, dim, mass1=1.0, mass2=1.0):
+    def __init__(self, dim, mass1=1.0, mass2=1.0, perturbation=0):
         self.dim = dim
         assert dim <= 8, "only dimensions up to 8 are supported"
         self.mass1 = mass1
         self.mass2 = mass2
+        self.perturbation = perturbation
         self.q_ref = np.asarray(
             [
                 0.73906985,
@@ -127,6 +132,18 @@ class TwoParticleConstantInitializer(object):
                 -0.19736723,
                 0.21630599,
                 1.13949553,
+            ]
+        )
+        self.dq_ref = np.asarray(
+            [
+                -0.21089876,
+                -0.33091329,
+                -0.31944245,
+                -0.34402548,
+                0.0837792,
+                -0.06486935,
+                -0.00423126,
+                0.08210326,
             ]
         )
         self.r_ref = np.asarray(
@@ -141,10 +158,24 @@ class TwoParticleConstantInitializer(object):
                 -0.13685782,
             ]
         )
+        self.dqdot_ref = np.asarray(
+            [
+                -0.14604759,
+                0.41068789,
+                -1.01714509,
+                2.33568677,
+                -0.09499955,
+                -0.30897333,
+                -0.6295583,
+                -0.75927771,
+            ]
+        )
 
     def draw(self):
         """Draw a new sample"""
         r = self.r_ref[: self.dim // 2]
         u1 = list(r / self.mass1)
         u2 = list(-r / self.mass2)
-        return (self.q_ref[: self.dim], u1 + u2)
+        q = self.q_ref[: self.dim] + self.perturbation * self.dq_ref[: self.dim]
+        qdot = u1 + u2 + self.perturbation * self.dqdot_ref[: self.dim]
+        return (q, qdot)
