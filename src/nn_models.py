@@ -161,8 +161,8 @@ class XYModelNNLagrangian(NNLagrangian):
         return tf.reduce_sum(tf.stack(grad_L[self.dim :], axis=1), axis=1)
 
 
-class DoubleWellPotentialNNLagrangian(NNLagrangian):
-    """Neural network representation of Lagrangian for the double well potential
+class SingleParticleNNLagrangian(NNLagrangian):
+    """Neural network representation of Lagrangian for a single particle moving in d dimensions
 
     If rotation_invariant is True, invariance under rotations (i.e. the SO(d) group) is assumed.
     If in addition reflection_invariant is True, then we also assume invariance under reflections,
@@ -176,7 +176,7 @@ class DoubleWellPotentialNNLagrangian(NNLagrangian):
     def __init__(
         self, dim, rotation_invariant=True, reflection_invariant=True, **kwargs
     ):
-        super(DoubleWellPotentialNNLagrangian, self).__init__(**kwargs)
+        super(SingleParticleNNLagrangian, self).__init__(**kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.reflection_invariant = reflection_invariant

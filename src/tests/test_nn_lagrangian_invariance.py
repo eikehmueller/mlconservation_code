@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from time_integrator import RK4Integrator
 from nn_models import (
     XYModelNNLagrangian,
-    DoubleWellPotentialNNLagrangian,
+    SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
     LagrangianModel,
 )
@@ -136,7 +136,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(random_seed):
 
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
 @pytest.mark.parametrize("reflection_invariant", [False, True])
-def test_double_well_potential_lagrangian_rotation_invariance(
+def test_single_particle_lagrangian_rotation_invariance(
     random_seed, dim, reflection_invariant
 ):
     """Check that the neural network Lagrangian has the same value
@@ -146,7 +146,7 @@ def test_double_well_potential_lagrangian_rotation_invariance(
     :arg reflection:invariant: test reflection invariance
     """
     np.random.seed(random_seed)
-    nn_lagrangian = DoubleWellPotentialNNLagrangian(dim, rotation_invariant=True)
+    nn_lagrangian = SingleParticleNNLagrangian(dim, rotation_invariant=True)
     # number of samples to check
     n_samples = 4
     # tolerance for tests

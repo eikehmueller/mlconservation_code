@@ -64,7 +64,7 @@ class RelativisticChargedParticleRandomInitializer(object):
         return q, qdot
 
 
-class DoubleWellPotentialConstantInitializer(object):
+class SingleParticleConstantInitializer(object):
     """Constant initialiser class for the double well potential model
 
     :arg dim: dimension of system
