@@ -206,7 +206,7 @@ class SingleParticleNNLagrangian(NNLagrangian):
         return {
             "dim": self.dim,
             "rotation_invariant": self.rotation_invariant,
-            "reflection_invariant": reflection_invariant,
+            "reflection_invariant": self.reflection_invariant,
         }
 
     @property
