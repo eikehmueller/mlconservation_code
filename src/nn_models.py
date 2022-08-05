@@ -121,8 +121,8 @@ class XYModelNNLagrangian(NNLagrangian):
             # Shift by offset
             q_qdot = tf.unstack(inputs, axis=1)
             q = tf.roll(tf.stack(q_qdot[: self.dim], axis=1), offset, axis=1)
-            qdot = tf.roll(tf.stack(q_qdot[self.dim :], axis=1), offset, axis=1)
-            x = tf.concat([q, qdot], axis=1)
+            qdot = tf.roll(tf.stack(q_qdot[self.dim :], axis=1), offset, 1)
+            x = tf.concat([q, qdot], 1)
             if self.rotation_invariant:
                 # replace q_j by q_j - q_{j-1} to take rotational symmetry
                 # into account

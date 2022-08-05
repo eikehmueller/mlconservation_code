@@ -223,8 +223,8 @@ class RelativisticChargedParticleSystem(DynamicalSystem):
         self,
         mass=1.0,
         charge=1.0,
-        E_electric=[0.7, -1.2, 0.3],
-        B_magnetic=[1.1, 0.7, 2.3],
+        E_electric=(0.7, -1.2, 0.3),
+        B_magnetic=(1.1, 0.7, 2.3),
         constant_E_electric=True,
     ):
         super().__init__(4)
@@ -351,7 +351,7 @@ class DoubleWellPotentialSystem(DynamicalSystem):
     """
 
     def __init__(self, dim, mass=1.0, mu=1.0, kappa=1.0):
-        self.dim = int(dim)
+        super().__init__(dim)
         self.mass = float(mass)
         self.mu = float(mu)
         self.kappa = float(kappa)
