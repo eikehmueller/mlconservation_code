@@ -1,9 +1,13 @@
+"""Data generator classes
+
+These classes can be used to construct data generator for training the neural networks
+"""
 import numpy as np
 import tensorflow as tf
 from time_integrator import RK4Integrator
 
 
-class DataGenerator(object):
+class DynamicalSystemDataGenerator(object):
     """Class for generating data for training Lagrangan Neural Network integrators
 
     Generates samples of the form (X^{(n)},y^{(n)}) with
@@ -78,3 +82,55 @@ class DataGenerator(object):
                 dX = self.sigma * np.random.normal(size=2 * dim)
                 dy = self.sigma * np.random.normal(size=dim)
                 yield (X + dX, y + dy)
+
+
+class KeplerDataGenerator(object):
+    """Class for generating data for Kepler system
+
+    Generates samples of the form (X^{(n)},y^{(n)}) with
+
+      X^{(n)} = q^{(n)} + xi_q^{(n)}, qdot^{(n)} + xi_{qdot}^{(n)}
+
+    and
+
+      y^{(n)} = qdotdot^{(n)} + xi_{qdotdot}^{(n)}
+
+    where the acceleration qqdot^{(n)} is computed from q^{(n)}, qdot^{(n)} by using
+    the analytical solution of a particle moving in a 1/r central force field.
+
+    Normally distributed random noise is added to both X and y.
+    """
+
+    def __init__(self, kepler_solution, sigma=0.1):
+        """Construct a new instance
+
+        :arg kepler_solution: analytical solution object
+        :arg sigma: noise level
+        """
+        self.kepler_solution = kepler_solution
+        self.sigma = sigma
+        self.dataset = tf.data.Dataset.from_generator(
+            self._generator,
+            output_signature=(
+                tf.TensorSpec(
+                    shape=[6],
+                    dtype=tf.float32,
+                ),
+                tf.TensorSpec(shape=[3], dtype=tf.float32),
+            ),
+        )
+
+    def _generator(self):
+        """Generate a new data sample (X,y)"""
+        while True:
+            # Draw random angle
+            phi = np.random.uniform(low=-np.pi, high=+np.pi)
+            # Compute corresponding position and velocity
+            q = self.kepler_solution.position(phi)
+            qdot = self.kepler_solution.velocity(phi)
+            X = np.concatenate([q, qdot], axis=0)
+            # Compute acceleration
+            y = self.kepler_solution.acceleration(phi)
+            dX = self.sigma * np.random.normal(size=6)
+            dy = self.sigma * np.random.normal(size=3)
+            yield (X + dX, y + dy)
