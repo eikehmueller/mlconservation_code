@@ -50,7 +50,7 @@ def test_xymodel_nn_lagrangian_rotation_invariance(random_seed, dense_layers, di
     # rotation angle
     phi = 1.1
     # tolerance for tests
-    tolerance = 1.0e-6
+    tolerance = 1.0e-5
     q = np.random.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
     qdot = np.random.normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
@@ -82,7 +82,7 @@ def test_xymodel_nn_lagrangian_shift_invariance(random_seed, dense_layers, dim, 
     # rotation angle
     phi = 1.1
     # tolerance for tests
-    tolerance = 1.0e-6
+    tolerance = 1.0e-5
     q = np.random.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
     qdot = np.random.normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
@@ -129,7 +129,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(random_seed, dense_layers):
     delta_1 = 0.3
     delta_2 = 1.7
     # tolerance for tests
-    tolerance = 1.0e-6
+    tolerance = 1.0e-5
     q0 = np.asarray(
         alpha_1 * np.cos(0.5 * np.pi * np.arange(dim) + delta_1), dtype=np.float32
     )
