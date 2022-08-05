@@ -73,6 +73,13 @@ rotation_invariant = bool(parameters["rotation_invariant"])
 translation_invariant = bool(parameters["translation_invariant"])
 reflection_invariant = bool(parameters["reflection_invariant"])
 
+# The intermediate dense layers to be used in the NNs
+dense_layers = [
+    tf.keras.layers.Dense(128, activation="softplus"),
+    tf.keras.layers.Dense(128, activation="softplus"),
+]
+
+
 # ---- Select system ----
 if parameters["system"] == "TwoParticle":
     dim_space = parameters["two_particle"]["dim_space"]
@@ -87,6 +94,7 @@ if parameters["system"] == "TwoParticle":
     )
     nn_lagrangian = TwoParticleNNLagrangian(
         dim_space,
+        dense_layers,
         rotation_invariant=rotation_invariant,
         translation_invariant=translation_invariant,
         reflection_invariant=reflection_invariant,
@@ -102,12 +110,14 @@ elif parameters["system"] == "DoubleWell":
     )
     nn_lagrangian = SingleParticleNNLagrangian(
         dim,
+        dense_layers,
         rotation_invariant=rotation_invariant,
         reflection_invariant=reflection_invariant,
     )
 elif parameters["system"] == "Kepler":
     nn_lagrangian = SingleParticleNNLagrangian(
         3,
+        dense_layers,
         rotation_invariant=rotation_invariant,
         reflection_invariant=reflection_invariant,
     )

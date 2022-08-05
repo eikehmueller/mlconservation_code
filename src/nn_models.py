@@ -94,18 +94,19 @@ class XYModelNNLagrangian(NNLagrangian):
       z = (q_0-q_{d-1},q_1-q_0,...,q_{d-1}-q_{d-2},qdot_1,...,qdot_{d-1})
 
     :arg dim: dimension d = number of spins
+    :arg dense_layers: dense layers
     :arg rotation_invariant: enforce rotational invariance
     :arg shift_invariant: enforce shift invariance
     """
 
-    def __init__(self, dim, rotation_invariant=True, shift_invariant=True, **kwargs):
+    def __init__(
+        self, dim, dense_layers, rotation_invariant=True, shift_invariant=True, **kwargs
+    ):
         super(XYModelNNLagrangian, self).__init__(**kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.shift_invariant = shift_invariant
-        self.dense_layers = [
-            tf.keras.layers.Dense(4, activation="tanh"),
-            tf.keras.layers.Dense(4, activation="tanh"),
+        self.dense_layers = dense_layers + [
             tf.keras.layers.Dense(1, use_bias=False),
         ]
 
@@ -169,20 +170,25 @@ class SingleParticleNNLagrangian(NNLagrangian):
     i.e. the larger group O(d)
 
     :arg dim: dimension d = number of spins
+    :arg dense_layers: intermediate dense layers
     :arg rotation_invariant: enforce rotational invariance
     :arg reflection_invariant: enforce invariance under reflections
     """
 
     def __init__(
-        self, dim, rotation_invariant=True, reflection_invariant=True, **kwargs
+        self,
+        dim,
+        dense_layers,
+        rotation_invariant=True,
+        reflection_invariant=True,
+        **kwargs
     ):
         super(SingleParticleNNLagrangian, self).__init__(**kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.reflection_invariant = reflection_invariant
-        self.dense_layers = [
-            tf.keras.layers.Dense(64, activation="softplus"),
-            tf.keras.layers.Dense(64, activation="softplus"),
+        # Add final layers
+        self.dense_layers = dense_layers + [
             tf.keras.layers.Dense(1, use_bias=False),
         ]
 
@@ -239,6 +245,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
     i.e. the larger group O(d)
 
     :arg dim_space: dimension of the space
+    :arg dense_layers: intermediate dense layers
     :arg rotation_invariant: enforce rotational invariance
     :arg translation_invariant: enforce translational invariance?
     :arg reflection_invariant: enforce invariance under reflections
@@ -247,6 +254,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
     def __init__(
         self,
         dim_space,
+        dense_layers,
         rotation_invariant=True,
         translation_invariant=True,
         reflection_invariant=True,
@@ -258,9 +266,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
         self.rotation_invariant = rotation_invariant
         self.translation_invariant = translation_invariant
         self.reflection_invariant = reflection_invariant
-        self.dense_layers = [
-            tf.keras.layers.Dense(128, activation="softplus"),
-            tf.keras.layers.Dense(128, activation="softplus"),
+        self.dense_layers = dense_layers + [
             tf.keras.layers.Dense(1, use_bias=False),
         ]
 
