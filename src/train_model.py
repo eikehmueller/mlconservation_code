@@ -124,15 +124,7 @@ else:
     print("ERROR: unknown system :" + parameters["system"])
 
 # ---- Create data generator ----
-if parameters["system"] in ["DoubleWell", "TwoParticle"]:
-    data_generator = DynamicalSystemDataGenerator(
-        dynamical_system,
-        initializer,
-        re_initialize=False,
-        sigma=parameters["sigma"],
-        tinterval=0.1,
-    )
-else:
+if parameters["system"] == "Kepler":
     kepler_solution = KeplerSolution(
         mass=parameters["kepler"]["mass"],
         alpha=parameters["kepler"]["alpha"],
@@ -140,6 +132,14 @@ else:
         energy=parameters["kepler"]["energy"],
     )
     data_generator = KeplerDataGenerator(kepler_solution, sigma=parameters["sigma"])
+else:
+    data_generator = DynamicalSystemDataGenerator(
+        dynamical_system,
+        initializer,
+        re_initialize=False,
+        sigma=parameters["sigma"],
+        tinterval=0.1,
+    )
 
 train_batches = data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
 
