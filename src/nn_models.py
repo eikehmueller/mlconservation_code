@@ -53,7 +53,7 @@ class NNLagrangian(tf.keras.layers.Layer):
         # Load configurstion
         with open(os.path.join(filepath, "config.json"), "r", encoding="utf8") as f:
             config = json.load(f)
-
+        config["dense_layers"] = None
         # Construct new instance of model
         model = cls.from_config(config)
         # Set layers and layer weights
@@ -106,9 +106,8 @@ class XYModelNNLagrangian(NNLagrangian):
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.shift_invariant = shift_invariant
-        self.dense_layers = dense_layers + [
-            tf.keras.layers.Dense(1, use_bias=False),
-        ]
+        self.dense_layers = [] if dense_layers is None else dense_layers
+        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
@@ -187,10 +186,9 @@ class SingleParticleNNLagrangian(NNLagrangian):
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.reflection_invariant = reflection_invariant
-        # Add final layers
-        self.dense_layers = dense_layers + [
-            tf.keras.layers.Dense(1, use_bias=False),
-        ]
+        # Add final layer
+        self.dense_layers = [] if dense_layers is None else dense_layers
+        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
@@ -266,9 +264,8 @@ class TwoParticleNNLagrangian(NNLagrangian):
         self.rotation_invariant = rotation_invariant
         self.translation_invariant = translation_invariant
         self.reflection_invariant = reflection_invariant
-        self.dense_layers = dense_layers + [
-            tf.keras.layers.Dense(1, use_bias=False),
-        ]
+        self.dense_layers = [] if dense_layers is None else dense_layers
+        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
