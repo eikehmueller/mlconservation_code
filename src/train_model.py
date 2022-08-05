@@ -119,7 +119,6 @@ elif parameters["system"] == "Kepler":
         3,
         dense_layers,
         rotation_invariant=rotation_invariant,
-        reflection_invariant=reflection_invariant,
     )
 else:
     print("ERROR: unknown system :" + parameters["system"])
