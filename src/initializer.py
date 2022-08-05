@@ -179,3 +179,17 @@ class TwoParticleConstantInitializer(object):
         q = self.q_ref[: self.dim] + self.perturbation * self.dq_ref[: self.dim]
         qdot = u1 + u2 + self.perturbation * self.dqdot_ref[: self.dim]
         return (q, qdot)
+
+
+class KeplerInitializer(object):
+    """Constant initializer for motion in 1/r potential"""
+
+    def __init__(self, kepler_solution):
+        self.kepler_solution = kepler_solution
+
+    def draw(self):
+        """Draw a new sample from the exact solution of the Kepler problem"""
+        phi = 0.0
+        q = self.kepler_solution.position(phi)
+        qdot = self.kepler_solution.velocity(phi)
+        return q, qdot
