@@ -4,6 +4,7 @@ and coordinate shifts
 
 import pytest
 import numpy as np
+import tensorflow as tf
 from scipy.stats import ortho_group, special_ortho_group
 import os
 import sys
@@ -19,8 +20,17 @@ from nn_models import (
 from common import random_seed
 
 
+@pytest.fixture
+def dense_layers():
+    """Return dense layers for neural network lagrangians"""
+    return [
+        tf.keras.layers.Dense(32, activation="softplus"),
+        tf.keras.layers.Dense(32, activation="softplus"),
+    ]
+
+
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
-def test_xymodel_nn_lagrangian_rotation_invariance(random_seed, dim):
+def test_xymodel_nn_lagrangian_rotation_invariance(random_seed, dense_layers, dim):
     """Check that the neural network Lagrangian has the same value
     if all angles are shifted by a fixed amount.
 
@@ -33,7 +43,7 @@ def test_xymodel_nn_lagrangian_rotation_invariance(random_seed, dim):
     """
     np.random.seed(random_seed)
     nn_lagrangian = XYModelNNLagrangian(
-        dim, rotation_invariant=True, shift_invariant=True
+        dim, dense_layers, rotation_invariant=True, shift_invariant=True
     )
     # number of samples to check
     n_samples = 4
@@ -51,7 +61,7 @@ def test_xymodel_nn_lagrangian_rotation_invariance(random_seed, dim):
 
 @pytest.mark.parametrize("dim", [4, 6, 8])
 @pytest.mark.parametrize("offset", [1, 2, 3])
-def test_xymodel_nn_lagrangian_shift_invariance(random_seed, dim, offset):
+def test_xymodel_nn_lagrangian_shift_invariance(random_seed, dense_layers, dim, offset):
     """Check that the neural network Lagrangian has the same value
     if all angles are shifted by a fixed offset.
 
@@ -65,7 +75,7 @@ def test_xymodel_nn_lagrangian_shift_invariance(random_seed, dim, offset):
     """
     np.random.seed(random_seed)
     nn_lagrangian = XYModelNNLagrangian(
-        dim, rotation_invariant=True, shift_invariant=True
+        dim, dense_layers, rotation_invariant=True, shift_invariant=True
     )
     # number of samples to check
     n_samples = 4
@@ -84,7 +94,7 @@ def test_xymodel_nn_lagrangian_shift_invariance(random_seed, dim, offset):
 
 
 @pytest.mark.skip(reason="too expensive")
-def test_xymodel_nn_eigenstate_shift_invariance(random_seed):
+def test_xymodel_nn_eigenstate_shift_invariance(random_seed, dense_layers):
     """Check that that if the dynamical system is initialised with an eigenstate
     of the shift operator, the dynamics will will preserve shift invariance.
 
@@ -110,7 +120,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(random_seed):
     # final time
     t_final = 1.0
     nn_lagrangian = XYModelNNLagrangian(
-        dim, rotation_invariant=True, shift_invariant=True
+        dim, dense_layers, rotation_invariant=True, shift_invariant=True
     )
     model = LagrangianModel(nn_lagrangian)
     time_integrator = RK4Integrator(model, dt)
@@ -137,7 +147,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(random_seed):
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
 @pytest.mark.parametrize("reflection_invariant", [False, True])
 def test_single_particle_lagrangian_rotation_invariance(
-    random_seed, dim, reflection_invariant
+    random_seed, dense_layers, dim, reflection_invariant
 ):
     """Check that the neural network Lagrangian has the same value
     if the input vectors are rotated.
@@ -146,7 +156,9 @@ def test_single_particle_lagrangian_rotation_invariance(
     :arg reflection:invariant: test reflection invariance
     """
     np.random.seed(random_seed)
-    nn_lagrangian = SingleParticleNNLagrangian(dim, rotation_invariant=True)
+    nn_lagrangian = SingleParticleNNLagrangian(
+        dim, dense_layers, rotation_invariant=True
+    )
     # number of samples to check
     n_samples = 4
     # tolerance for tests
@@ -170,6 +182,7 @@ def test_single_particle_lagrangian_rotation_invariance(
 @pytest.mark.parametrize("reflection_invariant", [False, True])
 def test_two_particle_lagrangian_invariance(
     random_seed,
+    dense_layers,
     dim_space,
     rotation_invariant,
     translation_invariant,
@@ -191,6 +204,7 @@ def test_two_particle_lagrangian_invariance(
     np.random.seed(random_seed)
     nn_lagrangian = TwoParticleNNLagrangian(
         dim_space,
+        dense_layers,
         rotation_invariant=rotation_invariant,
         translation_invariant=translation_invariant,
         reflection_invariant=reflection_invariant,
