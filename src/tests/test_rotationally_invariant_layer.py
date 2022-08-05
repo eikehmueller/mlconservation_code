@@ -10,11 +10,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from common import rng
+
 
 @pytest.mark.parametrize("dim_space", [2, 3, 4, 6, 8])
 @pytest.mark.parametrize("n_tensors", [1, 2, 3, 4, 5, 6])
 @pytest.mark.parametrize("reflection_invariant", [True, False])
-def test_rotationally_invariant_layer(dim_space, n_tensors, reflection_invariant):
+def test_rotationally_invariant_layer(dim_space, rng, n_tensors, reflection_invariant):
     """Compare the output from a rotationally invariant layer to a manual calculation
 
     :arg dim_space: dimension d of space
@@ -25,7 +27,7 @@ def test_rotationally_invariant_layer(dim_space, n_tensors, reflection_invariant
     tolerance = 1.0e-5
     # Create tensor of shape (BATCHSIZE,dim_space * n_tensors)
     BATCHSIZE = 1
-    inputs = np.random.normal(size=dim_space * n_tensors)
+    inputs = rng.normal(size=dim_space * n_tensors)
 
     # Manually reduce
     # Split inputs into n vectors of size d

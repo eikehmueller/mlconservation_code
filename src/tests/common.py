@@ -19,6 +19,6 @@ def harmonic_oscillator_matrices(dim):
 
 
 @pytest.fixture
-def random_seed():
-    """Return common random seed to be used by all tests"""
-    return 21494917
+def rng():
+    """Return random generator that can be used by all tests"""
+    return np.random.default_rng(21494917)
