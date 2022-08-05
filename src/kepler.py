@@ -62,7 +62,6 @@ class KeplerSolution(object):
         """
         phi = np.asarray(phi)
         u = self._u(phi)
-        r = 1 / u
         rdot = self.alpha / self.L_angular * self.excentricity * np.sin(phi - self.phi0)
         r_phidot = self.L_angular / self.mass * u
         return np.stack(
