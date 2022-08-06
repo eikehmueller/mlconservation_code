@@ -1,17 +1,12 @@
-import numpy as np
-import pytest
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from kepler import KeplerSolution
-from dynamical_system import KeplerSystem
-
 """Tests for the Kepler solution
 
 Check that the analytical solution is consistent with the corresponding dynamical system
 """
+
+import numpy as np
+import common
+from kepler import KeplerSolution  # pylint: disable=wrong-import-position
+from dynamical_system import KeplerSystem  # pylint: disable=wrong-import-position
 
 
 def test_kepler_acceleration_analytical():
