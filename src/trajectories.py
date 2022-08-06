@@ -1,6 +1,6 @@
 """Code for generating trajectories while monitoring quantities of interest"""
 from time_integrator import RK4Integrator
-from dynamical_system import TwoParticleSystem
+from dynamical_system import TwoParticleSystem, DoubleWellPotentialSystem, KeplerSystem
 import numpy as np
 
 
@@ -86,6 +86,54 @@ class InvariantMonitor(Monitor):
         self.invariants[:, self.j_step] = np.asarray(
             self.lagrangian.invariant(inputs)
         ).flatten()
+        self.j_step += 1
+
+
+class SingleParticleInvariantMonitor(Monitor):
+    """Monitor for angular momentum invariants of a single particle
+
+    Stores the invariants of the dynamical system in an array of size ninvariant x (nsteps+1)
+
+    :arg dynamical_system: underlying dynamical system
+    """
+
+    def __init__(self, dynamical_system):
+        assert isinstance(dynamical_system, DoubleWellPotentialSystem) or isinstance(
+            dynamical_system, KeplerSystem
+        ), "Monitor only works for instances of SingleParticleSystem"
+        self.dynamical_system = dynamical_system
+        self.mass = self.dynamical_system.mass
+        self.dim = dynamical_system.dim
+        self.ninvariant = self.dim * (self.dim - 1) // 2
+        super(SingleParticleInvariantMonitor, self).__init__(self.ninvariant)
+
+    def reset(self, nsteps):
+        """reset the monitor to start new accumulation
+
+        :arg nsteps: number of steps
+        """
+        super(SingleParticleInvariantMonitor, self).reset(nsteps)
+        self.invariants = np.zeros((self.ninvariant, nsteps + 1))
+
+    @property
+    def value(self):
+        """Return monitored quantity"""
+        return self.invariants
+
+    def __call__(self, time_integrator):
+        """Evaluate the monitor for value of the invariant of the underlying system
+
+        :arg time_integrator: time integrator to monitor
+        """
+        x = time_integrator.q[0 : self.dim]
+        u = time_integrator.qdot[0 : self.dim]
+        ell = 0
+        for j in range(self.dim):
+            for k in range(j + 1, self.dim):
+                self.invariants[ell, self.j_step] = self.mass * (
+                    u[j] * x[k] - u[k] * x[j]
+                )
+                ell += 1
         self.j_step += 1
 
 
