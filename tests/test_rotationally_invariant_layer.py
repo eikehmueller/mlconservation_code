@@ -5,11 +5,7 @@ import tensorflow as tf
 from itertools import permutations, combinations, combinations_with_replacement
 from sympy.combinatorics.permutations import Permutation
 from nn_layers import RotationallyInvariantLayer
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+import common
 from common import rng
 
 
