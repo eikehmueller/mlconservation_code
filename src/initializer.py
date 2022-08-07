@@ -146,12 +146,21 @@ class TwoParticleConstantInitializer:
 class KeplerInitializer:
     """Constant initializer for motion in 1/r potential
 
-    def __init__(self, kepler_solution):
+    :arg kepler_solution: analytical solution of the equations of motion
+    :arg perturbation: strength of perturbation; a random normal vector scaled
+                       by this number is added to the result
+    """
+
+    def __init__(self, kepler_solution, perturbation=0):
         self.kepler_solution = kepler_solution
+        self.perturbation = perturbation
 
     def draw(self):
         """Draw a new sample from the exact solution of the Kepler problem"""
         phi = 0.0
         q = self.kepler_solution.position(phi)
         qdot = self.kepler_solution.velocity(phi)
-        return q, qdot
+        rng_table = NormalRandomLookup()
+        return q + self.perturbation * rng_table.take(
+            3
+        ), qdot + self.perturbation * rng_table.take(3)
