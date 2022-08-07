@@ -447,7 +447,7 @@ class KeplerSystem(DynamicalSystem):
     """
 
     def __init__(self, mass=1.0, alpha=1.0):
-        super(KeplerSystem, self).__init__(3)
+        super().__init__(3)
         self.mass = float(mass)
         self.alpha = float(alpha)
         assert self.mass > 0
