@@ -23,6 +23,10 @@ class ndarrayDecoder(json.JSONDecoder):
         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj):
+        """Hook for object in decoder
+
+        :arg obj: Object
+        """
         if "_type" not in obj:
             return obj
         datatype = obj["_type"]

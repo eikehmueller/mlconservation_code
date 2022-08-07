@@ -1,8 +1,8 @@
 """User defined neural network layers"""
 import math
+from itertools import permutations, combinations, combinations_with_replacement
 import numpy as np
 import tensorflow as tf
-from itertools import permutations, combinations, combinations_with_replacement
 from sympy.combinatorics.permutations import Permutation
 
 
@@ -29,7 +29,7 @@ class RotationallyInvariantLayer(tf.keras.layers.Layer):
     """
 
     def __init__(self, dim_space, n_tensors, reflection_invariant=False, **kwargs):
-        super(RotationallyInvariantLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dim_space = dim_space
         self.n_tensors = n_tensors
         self.reflection_invariant = reflection_invariant
@@ -41,8 +41,7 @@ class RotationallyInvariantLayer(tf.keras.layers.Layer):
         n_cross_products = math.comb(self.n_tensors, self.dim_space)
         if self.reflection_invariant:
             return n_dot_products
-        else:
-            return n_dot_products + n_cross_products
+        return n_dot_products + n_cross_products
 
     def call(self, inputs):
         """Combine inputs into rotationally invariant combinations
@@ -69,7 +68,8 @@ class RotationallyInvariantLayer(tf.keras.layers.Layer):
         ]
         if not self.reflection_invariant:
             # === 2. Contractions with Levi-Civita tensor ===
-            # b_vec_list[j][k] is the k-th entry of the j-the tensor where j=0,1,...n-1 and k=0,1,...,d-1
+            # b_vec_list[j][k] is the k-th entry of the j-the tensor where j=0,1,...n-1
+            # and k=0,1,...,d-1
             b_vec_list = [
                 z[j * self.dim_space : (j + 1) * self.dim_space]
                 for j in range(self.n_tensors)

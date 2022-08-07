@@ -1,4 +1,3 @@
-import numpy as np
 import tensorflow as tf
 
 
@@ -101,7 +100,8 @@ class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer
     The components of the function g are given by:
 
     g^mu = ( dL/dx^nu + dA^rho/dx^nu * dL/dA^rho
-             - u^rho* ((J_{x,u})_{rho,nu} + dA^sigma/dx^rho * (J_{A,u})_{sigma,nu}) ) * (J^{-1}_{u,u})^{nu,mu}
+             - u^rho* ((J_{x,u})_{rho,nu} + dA^sigma/dx^rho * (J_{A,u})_{sigma,nu}) )
+                * (J^{-1}_{u,u})^{nu,mu}
 
     where the matrices J_{x,u}, J_{u,u} and J_{A,u} are defined as
 

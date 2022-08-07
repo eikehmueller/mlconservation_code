@@ -18,7 +18,7 @@ class XYModelRandomInitializer(object):
         return q, qdot
 
 
-class XYModelConstantInitializer(object):
+class XYModelConstantInitializer:
     """Constant initialiser class for the XY model"""
 
     def __init__(self, dim):
@@ -36,7 +36,7 @@ class XYModelConstantInitializer(object):
         return q, qdot
 
 
-class RelativisticChargedParticleRandomInitializer(object):
+class RelativisticChargedParticleRandomInitializer:
     """Random initializer for charged particle system
 
     :arg rho: scaling-factor for three-velocity
@@ -64,7 +64,7 @@ class RelativisticChargedParticleRandomInitializer(object):
         return q, qdot
 
 
-class SingleParticleConstantInitializer(object):
+class SingleParticleConstantInitializer:
     """Constant initialiser class for the double well potential model
 
     :arg dim: dimension of system
@@ -107,7 +107,7 @@ class SingleParticleConstantInitializer(object):
         return self.q_ref[: self.dim], self.qdot_ref[: self.dim]
 
 
-class TwoParticleConstantInitializer(object):
+class TwoParticleConstantInitializer:
     """Constant initialiser class for interacting two particle system
 
     :arg dim: dimension of phase space
@@ -181,8 +181,8 @@ class TwoParticleConstantInitializer(object):
         return (q, qdot)
 
 
-class KeplerInitializer(object):
-    """Constant initializer for motion in 1/r potential"""
+class KeplerInitializer:
+    """Constant initializer for motion in 1/r potential
 
     def __init__(self, kepler_solution):
         self.kepler_solution = kepler_solution

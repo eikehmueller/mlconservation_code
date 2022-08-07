@@ -1,10 +1,10 @@
 """Code for generating trajectories while monitoring quantities of interest"""
+import numpy as np
 from time_integrator import RK4Integrator
 from dynamical_system import TwoParticleSystem, DoubleWellPotentialSystem, KeplerSystem
-import numpy as np
 
 
-class Monitor(object):
+class Monitor:
     def __init__(self, ncomp):
         """Class for accumulating data over a trajectory
 
@@ -27,14 +27,14 @@ class PositionMonitor(Monitor):
     """
 
     def __init__(self, dim):
-        super(PositionMonitor, self).__init__(dim)
+        super().__init__(dim)
 
     def reset(self, nsteps):
         """reset the monitor to start new accumulation
 
         :arg nsteps: number of steps
         """
-        super(PositionMonitor, self).reset(nsteps)
+        super().reset(nsteps)
         self.q_all = np.zeros((self.ncomp, nsteps + 1))
 
     @property
@@ -62,14 +62,14 @@ class InvariantMonitor(Monitor):
 
     def __init__(self, lagrangian):
         self.lagrangian = lagrangian
-        super(InvariantMonitor, self).__init__(self.lagrangian.ninvariant)
+        super().__init__(self.lagrangian.ninvariant)
 
     def reset(self, nsteps):
         """reset the monitor to start new accumulation
 
         :arg nsteps: number of steps
         """
-        super(InvariantMonitor, self).reset(nsteps)
+        super().reset(nsteps)
         self.invariants = np.zeros((self.ncomp, nsteps + 1))
 
     @property
@@ -98,21 +98,21 @@ class SingleParticleInvariantMonitor(Monitor):
     """
 
     def __init__(self, dynamical_system):
-        assert isinstance(dynamical_system, DoubleWellPotentialSystem) or isinstance(
-            dynamical_system, KeplerSystem
+        assert isinstance(
+            dynamical_system, (DoubleWellPotentialSystem, KeplerSystem)
         ), "Monitor only works for instances of SingleParticleSystem"
         self.dynamical_system = dynamical_system
         self.mass = self.dynamical_system.mass
         self.dim = dynamical_system.dim
         self.ninvariant = self.dim * (self.dim - 1) // 2
-        super(SingleParticleInvariantMonitor, self).__init__(self.ninvariant)
+        super().__init__(self.ninvariant)
 
     def reset(self, nsteps):
         """reset the monitor to start new accumulation
 
         :arg nsteps: number of steps
         """
-        super(SingleParticleInvariantMonitor, self).reset(nsteps)
+        super().reset(nsteps)
         self.invariants = np.zeros((self.ninvariant, nsteps + 1))
 
     @property
@@ -155,14 +155,14 @@ class TwoParticleInvariantMonitor(Monitor):
         self.dim = dynamical_system.dim
         self.dim_space = self.dim // 2
         self.ninvariant = self.dim_space * (self.dim_space + 1) // 2
-        super(TwoParticleInvariantMonitor, self).__init__(self.ninvariant)
+        super().__init__(self.ninvariant)
 
     def reset(self, nsteps):
         """reset the monitor to start new accumulation
 
         :arg nsteps: number of steps
         """
-        super(TwoParticleInvariantMonitor, self).reset(nsteps)
+        super().reset(nsteps)
         self.invariants = np.zeros((self.ninvariant, nsteps + 1))
 
     @property
@@ -200,7 +200,7 @@ class VelocitySumMonitor(Monitor):
     """
 
     def __init__(self):
-        super(VelocitySumMonitor, self).__init__(1)
+        super().__init__(1)
 
     @property
     def value(self):
@@ -212,7 +212,7 @@ class VelocitySumMonitor(Monitor):
 
         :arg nsteps: number of steps
         """
-        super(VelocitySumMonitor, self).reset(nsteps)
+        super().reset(nsteps)
         self.sum_qdot = np.zeros(nsteps + 1)
 
     def __call__(self, time_integrator):
@@ -224,12 +224,12 @@ class VelocitySumMonitor(Monitor):
         self.j_step += 1
 
 
-class TrajectoryGenerator(object):
+class TrajectoryGenerator:
     def __init__(self, dynamical_system, initializer, monitors, dt=0.01, t_final=1.0):
         """Generate trajectory by numerically integrating the chosen dynamical system
 
         :arg dynamical_system: system to integrate
-        :arg initializer: initialiser object
+        :arg initializer: initialiser
         :arg dt: numerical timestep size
         :arg t_final: final time
         """
@@ -249,7 +249,6 @@ class TrajectoryGenerator(object):
         """Integrate the dynamical system forward in time, while monitoring quantities"""
         q, qdot = self.initializer.draw()
         nsteps = int(self.t_final / self.dt)
-        t = np.zeros(nsteps + 1)
         self.time_integrator.set_state(q, qdot)
         for j in range(nsteps + 1):
             for monitor in self.monitors:

@@ -1,11 +1,11 @@
+"""Classes for representing Lagrangians"""
+
 from abc import abstractmethod
 import tensorflow as tf
 import numpy as np
 
-"""Classes for representing Lagrangians"""
 
-
-class Lagrangian(object):
+class Lagrangian:
     """Base class for Lagrangian
 
     :arg dim: dimension of state space

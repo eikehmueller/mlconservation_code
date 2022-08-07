@@ -12,7 +12,7 @@ class NNLagrangian(tf.keras.layers.Layer):
     """Base class for neural network based Lagrangians"""
 
     def __init__(self, **kwargs):
-        super(NNLagrangian, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dense_layers = []
 
     def save(self, filepath, overwrite=True):
@@ -102,7 +102,7 @@ class XYModelNNLagrangian(NNLagrangian):
     def __init__(
         self, dim, dense_layers, rotation_invariant=True, shift_invariant=True, **kwargs
     ):
-        super(XYModelNNLagrangian, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.shift_invariant = shift_invariant
@@ -182,7 +182,7 @@ class SingleParticleNNLagrangian(NNLagrangian):
         reflection_invariant=True,
         **kwargs
     ):
-        super(SingleParticleNNLagrangian, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.reflection_invariant = reflection_invariant
@@ -258,7 +258,7 @@ class TwoParticleNNLagrangian(NNLagrangian):
         reflection_invariant=True,
         **kwargs
     ):
-        super(TwoParticleNNLagrangian, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dim_space = dim_space
         self.dim = 2 * dim_space
         self.rotation_invariant = rotation_invariant
@@ -362,7 +362,7 @@ class LagrangianModel(tf.keras.models.Model):
     """
 
     def __init__(self, nn_lagrangian, **kwargs):
-        super(LagrangianModel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dynamical_system = LagrangianDynamicalSystem(nn_lagrangian)
         self.dim = self.dynamical_system.dim
 
@@ -380,5 +380,4 @@ class LagrangianModel(tf.keras.models.Model):
                 .numpy()
                 .flatten()
             )
-        else:
-            return self.dynamical_system(inputs)
+        return self.dynamical_system(inputs)

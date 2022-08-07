@@ -2,7 +2,7 @@
 import numpy as np
 
 
-class KeplerSolution(object):
+class KeplerSolution:
     """Class representing an exact solution of motion in a central 1/r potential
 
     The potential is given by -alpha/r, and the solutions for negative energy are

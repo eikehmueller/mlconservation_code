@@ -1,12 +1,3 @@
-from abc import ABC, abstractmethod
-import string
-import subprocess
-import ctypes
-import hashlib
-import re
-import os
-import numpy as np
-
 """Classes for numerical time integration of dynamical systems.
 
 The systems are assumed to be of the form
@@ -21,6 +12,15 @@ If the dynamical system contains C-code snippets for computing
 the acceleration, these are compiled into a library. Otherwise,
 the acceleration() method of the dynamical system class is used.
 """
+
+from abc import ABC, abstractmethod
+import string
+import subprocess
+import ctypes
+import hashlib
+import re
+import os
+import numpy as np
 
 
 class TimeIntegrator(ABC):
@@ -73,13 +73,13 @@ class TimeIntegrator(ABC):
         # If this is the case, auto-generate fast C code for the Velocity Verlet update
 
         if self.fast_code:
-            try:
+            if hasattr(self.dynamical_system, "preamble_code"):
                 preamble = self.dynamical_system.preamble_code
-            except:
+            else:
                 preamble = ""
-            try:
+            if hasattr(self.dynamical_system, "header_code"):
                 header = self.dynamical_system.header_code
-            except:
+            else:
                 header = ""
             c_substituted_sourcecode = string.Template(c_sourcecode).substitute(
                 DIM=self.dynamical_system.dim,
@@ -118,8 +118,7 @@ class TimeIntegrator(ABC):
                 np.ctypeslib.c_intp,
             ]
             return timestepper_lib
-        else:
-            return None
+        return None
 
 
 class ForwardEulerIntegrator(TimeIntegrator):

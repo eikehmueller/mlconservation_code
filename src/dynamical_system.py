@@ -316,16 +316,15 @@ class RelativisticChargedParticleSystem(DynamicalSystem):
                     ).tolist()
                 )
             )
-        else:
-            E = -self.E_electric * np.dot(position, self.E_electric) * self.E_nrm_inv
-            return (
-                self.charge
-                / self.mass
-                * np.asarray(
-                    [np.dot(velocity, E)]
-                    + (u0 * E + np.cross(velocity, self.B_magnetic)).tolist()
-                )
+        E = -self.E_electric * np.dot(position, self.E_electric) * self.E_nrm_inv
+        return (
+            self.charge
+            / self.mass
+            * np.asarray(
+                [np.dot(velocity, E)]
+                + (u0 * E + np.cross(velocity, self.B_magnetic)).tolist()
             )
+        )
 
 
 class DoubleWellPotentialSystem(DynamicalSystem):

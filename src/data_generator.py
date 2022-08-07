@@ -7,7 +7,7 @@ import tensorflow as tf
 from time_integrator import RK4Integrator
 
 
-class DynamicalSystemDataGenerator(object):
+class DynamicalSystemDataGenerator:
     """Class for generating data for training Lagrangan Neural Network integrators
 
     Generates samples of the form (X^{(n)},y^{(n)}) with
@@ -84,7 +84,7 @@ class DynamicalSystemDataGenerator(object):
                 yield (X + dX, y + dy)
 
 
-class KeplerDataGenerator(object):
+class KeplerDataGenerator:
     """Class for generating data for Kepler system
 
     Generates samples of the form (X^{(n)},y^{(n)}) with
