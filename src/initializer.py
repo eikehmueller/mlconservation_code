@@ -15,7 +15,7 @@ class NormalRandomLookup:
 
         :arg filename: name of file to read from.
         """
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf8") as f:
             self.data = np.asarray(json.load(f), dtype=np.float32)
         self.reset()
 
