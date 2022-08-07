@@ -1,7 +1,6 @@
 """User defined neural network layers"""
 import math
 from itertools import permutations, combinations, combinations_with_replacement
-import numpy as np
 import tensorflow as tf
 from sympy.combinatorics.permutations import Permutation
 
