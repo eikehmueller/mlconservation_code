@@ -1,12 +1,13 @@
 """Main script for training Neural network model
 
-Parameters are set via a json file which is passed as a command line argument:
+Parameters are set via a toml file which is passed as a command line argument:
 
 python train_model.py --parameterfile=PARAMETERFILE
 
-If no parameter filename is given, it defaults to training_parameters.py.
+If no parameter filename is given, it defaults to training_parameters.toml
 """
-
+import sys
+import toml
 import json
 import argparse
 import tensorflow as tf
@@ -30,7 +31,7 @@ parser.add_argument(
     "--parameterfile",
     dest="parameterfile",
     action="store",
-    default="training_parameters.json",
+    default="training_parameters.toml",
     help="name of json file with training parameters",
 )
 cmdline_args = parser.parse_args()
@@ -38,40 +39,26 @@ cmdline_args = parser.parse_args()
 print("==========================================")
 print("     training neural network model")
 print("==========================================")
-
-with open(cmdline_args.parameterfile, "r", encoding="utf-8") as json_data:
-    parameters = json.load(json_data)
-    json_data.close()
-
-
-def pretty_print(d, indent=0):
-    """Print out dictionary with indents
-
-    :arg d: dictionary to print
-    :arg indent: indent to use
-    """
-    for key, value in d.items():
-        if isinstance(value, dict):
-            print(indent * " " + str(key))
-            pretty_print(value, indent + 4)
-        else:
-            print(indent * " " + str(key) + " : " + str(value))
-
-
-print("==== parameters ====")
-print("reading parameters from " + cmdline_args.parameterfile)
-pretty_print(parameters)
 print("")
+with open(cmdline_args.parameterfile, "r", encoding="utf8") as toml_data:
+    parameters = toml.load(toml_data)
+
+print(parameters)
+print("==== parameters ====")
+print(cmdline_args.parameterfile)
+print("----------------- begin ----------------------")
+print(toml.dumps(parameters))
+print("----------------- end ------------------------")
 
 # Set training parameters passed from file
-EPOCHS = parameters["epochs"]
-STEPS_PER_EPOCH = parameters["steps_per_epoch"]
-BATCH_SIZE = parameters["batch_size"]
+EPOCHS = parameters["training"]["epochs"]
+STEPS_PER_EPOCH = parameters["training"]["steps_per_epoch"]
+BATCH_SIZE = parameters["training"]["batch_size"]
 SHUFFLE_BUFFER_SIZE = 4 * BATCH_SIZE
 
-rotation_invariant = bool(parameters["rotation_invariant"])
-translation_invariant = bool(parameters["translation_invariant"])
-reflection_invariant = bool(parameters["reflection_invariant"])
+rotation_invariant = bool(parameters["symmetry"]["rotation_invariant"])
+translation_invariant = bool(parameters["symmetry"]["translation_invariant"])
+reflection_invariant = bool(parameters["symmetry"]["reflection_invariant"])
 
 # The intermediate dense layers to be used in the NNs
 dense_layers = [
@@ -81,16 +68,16 @@ dense_layers = [
 
 
 # ---- Select system ----
-if parameters["system"] == "TwoParticle":
-    dim_space = parameters["two_particle"]["dim_space"]
+if parameters["system"]["name"] == "TwoParticle":
+    dim_space = parameters["system_specific"]["two_particle"]["dim_space"]
     dim = 2 * dim_space
     initializer = TwoParticleConstantInitializer(dim)
     dynamical_system = TwoParticleSystem(
         dim_space,
-        mass1=parameters["two_particle"]["mass"][0],
-        mass2=parameters["two_particle"]["mass"][1],
-        mu=parameters["two_particle"]["mu"],
-        kappa=parameters["two_particle"]["kappa"],
+        mass1=parameters["system_specific"]["two_particle"]["mass"][0],
+        mass2=parameters["system_specific"]["two_particle"]["mass"][1],
+        mu=parameters["system_specific"]["two_particle"]["mu"],
+        kappa=parameters["system_specific"]["two_particle"]["kappa"],
     )
     nn_lagrangian = TwoParticleNNLagrangian(
         dim_space,
@@ -99,14 +86,14 @@ if parameters["system"] == "TwoParticle":
         translation_invariant=translation_invariant,
         reflection_invariant=reflection_invariant,
     )
-elif parameters["system"] == "DoubleWell":
-    dim = parameters["double_well"]["dim"]
+elif parameters["system"]["name"] == "DoubleWell":
+    dim = parameters["system_specific"]["double_well"]["dim"]
     initializer = SingleParticleConstantInitializer(dim)
     dynamical_system = DoubleWellPotentialSystem(
         dim=dim,
-        mass=parameters["double_well"]["mass"],
-        mu=parameters["double_well"]["mu"],
-        kappa=parameters["double_well"]["kappa"],
+        mass=parameters["system_specific"]["double_well"]["mass"],
+        mu=parameters["system_specific"]["double_well"]["mu"],
+        kappa=parameters["system_specific"]["double_well"]["kappa"],
     )
     nn_lagrangian = SingleParticleNNLagrangian(
         dim,
@@ -114,7 +101,7 @@ elif parameters["system"] == "DoubleWell":
         rotation_invariant=rotation_invariant,
         reflection_invariant=reflection_invariant,
     )
-elif parameters["system"] == "Kepler":
+elif parameters["system"]["name"] == "Kepler":
     nn_lagrangian = SingleParticleNNLagrangian(
         3,
         dense_layers,
@@ -124,14 +111,16 @@ else:
     print("ERROR: unknown system :" + parameters["system"])
 
 # ---- Create data generator ----
-if parameters["system"] == "Kepler":
+if parameters["system"]["name"] == "Kepler":
     kepler_solution = KeplerSolution(
-        mass=parameters["kepler"]["mass"],
-        alpha=parameters["kepler"]["alpha"],
-        excentricity=parameters["kepler"]["excentricity"],
-        energy=parameters["kepler"]["energy"],
+        mass=parameters["system_specific"]["kepler"]["mass"],
+        alpha=parameters["system_specific"]["kepler"]["alpha"],
+        excentricity=parameters["system_specific"]["kepler"]["excentricity"],
+        energy=parameters["system_specific"]["kepler"]["energy"],
     )
-    data_generator = KeplerDataGenerator(kepler_solution, sigma=parameters["sigma"])
+    data_generator = KeplerDataGenerator(
+        kepler_solution, sigma=parameters["system"]["sigma"]
+    )
 else:
     data_generator = DynamicalSystemDataGenerator(
         dynamical_system,
@@ -147,7 +136,7 @@ train_batches = data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_
 model = LagrangianModel(nn_lagrangian)
 
 learning_rate = tf.keras.optimizers.schedules.CosineDecay(
-    parameters["initial_learning_rate"],
+    parameters["training"]["initial_learning_rate"],
     EPOCHS * STEPS_PER_EPOCH,
     alpha=1.0e-2,
 )
@@ -170,5 +159,5 @@ result = model.fit(
 )
 
 #
-if parameters["saved_model_filename"] != "":
-    nn_lagrangian.save(parameters["saved_model_filename"])
+if parameters["saved_model"]["filename"] != "":
+    nn_lagrangian.save(parameters["saved_model"]["filename"])

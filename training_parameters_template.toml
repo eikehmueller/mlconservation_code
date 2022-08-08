@@ -1,0 +1,48 @@
+# ------------------------------
+# Parameters for NN training run
+# ------------------------------
+#
+# to train the model, use 
+#
+#    python train_model.py --parameterfile training_parameters.toml
+
+title = "Template parameters"
+
+# Training parameters
+[training]
+    batch_size = 16
+    epochs = 100
+    steps_per_epoch = 100
+    initial_learning_rate = 1.0E-4
+    
+# Name of file to save trained model to
+[saved_model]
+    filename = "../assets/trained_models/kepler/nn_lagrangian"
+
+# System to be simulated
+[system]
+    name = "Kepler" # Can be "Kepler", "DoubleWell", "TwoParticle"
+    sigma = 0.01    # Magnitude of normal noise
+
+# Symmetries of the NN model
+[symmetry]
+    rotation_invariant = true     # enforce rotational invariance?     
+    translation_invariant = true  # enforce translational invariance?
+    reflection_invariant = true   # enforce reflection invariance?
+
+# System specific parameters
+[system_specific.two_particle]
+    dim_space = 3       # dimension of space
+    mass = [1.0,1.0]    # masses of the two particles
+    mu = 1.0            # coefficient of quadratic term in potential
+    kappa = 1.0         # coefficient of quartic term in potential
+[system_specific.double_well]
+    dim = 4
+    mass = 1.0          # masses of particle
+    mu = 1.0            # coefficient of quadratic term in potential
+    kappa = 1.0         # coefficient of quartic term in potential
+[system_specific.kepler]
+    mass = 1.0          # mass of particle
+    alpha = 1.0         # coefficient of 1/r term
+    excentricity = 0.8  # excentricity of orbit
+    energy = -0.1       # energy (must be negative for closed orbits)
