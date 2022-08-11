@@ -6,10 +6,9 @@ python train_model.py --parameterfile=PARAMETERFILE
 
 If no parameter filename is given, it defaults to training_parameters.toml
 """
-import sys
-import toml
-import json
+
 import argparse
+import toml
 import tensorflow as tf
 
 from data_generator import DynamicalSystemDataGenerator, KeplerDataGenerator
@@ -38,7 +37,7 @@ parser.add_argument(
     dest="parameterfile",
     action="store",
     default="training_parameters.toml",
-    help="name of json file with training parameters",
+    help="name of toml file with training parameters",
 )
 cmdline_args = parser.parse_args()
 
