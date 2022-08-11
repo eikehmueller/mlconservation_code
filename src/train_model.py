@@ -113,10 +113,10 @@ elif parameters["system"]["name"] == "Kepler":
     )
 elif parameters["system"]["name"] == "Schwarzschild":
     initializer = SchwarzschildConstantInitializer(
-        kappa=parameters["system_specific"]["schwarzschild"]["r_s"]
+        parameters["system_specific"]["schwarzschild"]["r_s"]
     )
     dynamical_system = SchwarzschildSystem(
-        kappa=parameters["system_specific"]["schwarzschild"]["r_s"]
+        parameters["system_specific"]["schwarzschild"]["r_s"]
     )
     nn_lagrangian = SchwarzschildNNLagrangian(
         dense_layers,
@@ -141,7 +141,7 @@ else:
         dynamical_system,
         initializer,
         re_initialize=False,
-        sigma=parameters["sigma"],
+        sigma=parameters["system"]["sigma"],
         tinterval=0.1,
     )
 
