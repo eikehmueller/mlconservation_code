@@ -43,7 +43,6 @@ print("")
 with open(cmdline_args.parameterfile, "r", encoding="utf8") as toml_data:
     parameters = toml.load(toml_data)
 
-print(parameters)
 print("==== parameters ====")
 print(cmdline_args.parameterfile)
 print("----------------- begin ----------------------")
