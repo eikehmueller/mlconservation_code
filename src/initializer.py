@@ -1,4 +1,5 @@
 """Various classes for initialising dynamical systems"""
+import os
 import json
 import numpy as np
 from lagrangian import SchwarzschildLagrangian
@@ -12,11 +13,10 @@ class NormalRandomLookup:
     This guarantees that the exact same random numbers are used in every run.
     """
 
-    def __init__(self, filename="random_normal_table.json"):
-        """Create new instance
-
-        :arg filename: name of file to read from.
-        """
+    def __init__(self):
+        """Create new instance"""
+        filename = os.path.join(os.path.dirname(__file__), "random_normal_table.json")
+        print(f"Loading random numbers from file {filename}")
         with open(filename, "r", encoding="utf8") as f:
             self.data = np.asarray(json.load(f), dtype=np.float32)
         self.reset()
