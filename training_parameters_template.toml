@@ -21,7 +21,7 @@ title = "Template parameters"
 
 # System to be simulated
 [system]
-    name = "Kepler" # Can be "Kepler", "DoubleWell", "TwoParticle"
+    name = "Kepler" # Can be "Kepler", "DoubleWell", "TwoParticle", "Schwarzschild"
     sigma = 0.01    # Magnitude of normal noise
 
 # Symmetries of the NN model
@@ -46,3 +46,5 @@ title = "Template parameters"
     alpha = 1.0         # coefficient of 1/r term
     excentricity = 0.8  # excentricity of orbit
     energy = -0.1       # energy (must be negative for closed orbits)
+[system_specific.schwarzschild]
+    r_s = 0.1           # Schwarzschild radius

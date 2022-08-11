@@ -13,15 +13,21 @@ import argparse
 import tensorflow as tf
 
 from data_generator import DynamicalSystemDataGenerator, KeplerDataGenerator
-from dynamical_system import DoubleWellPotentialSystem, TwoParticleSystem
+from dynamical_system import (
+    DoubleWellPotentialSystem,
+    TwoParticleSystem,
+    SchwarzschildSystem,
+)
 from nn_models import (
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
+    SchwarzschildNNLagrangian,
     LagrangianModel,
 )
 from initializer import (
     SingleParticleConstantInitializer,
     TwoParticleConstantInitializer,
+    SchwarzschildConstantInitializer,
 )
 from kepler import KeplerSolution
 
@@ -103,6 +109,17 @@ elif parameters["system"]["name"] == "DoubleWell":
 elif parameters["system"]["name"] == "Kepler":
     nn_lagrangian = SingleParticleNNLagrangian(
         3,
+        dense_layers,
+        rotation_invariant=rotation_invariant,
+    )
+elif parameters["system"]["name"] == "Schwarzschild":
+    initializer = SchwarzschildConstantInitializer(
+        kappa=parameters["system_specific"]["schwarzschild"]["r_s"]
+    )
+    dynamical_system = SchwarzschildSystem(
+        kappa=parameters["system_specific"]["schwarzschild"]["r_s"]
+    )
+    nn_lagrangian = SchwarzschildNNLagrangian(
         dense_layers,
         rotation_invariant=rotation_invariant,
     )
