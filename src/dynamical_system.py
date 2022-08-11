@@ -433,7 +433,7 @@ class TwoParticleSystem(DynamicalSystem):
 
 
 class KeplerSystem(DynamicalSystem):
-    """Motion of a particle under a 1/r central field
+    """Motion of a non-relativistic particle under a 1/r central field
 
     The acceleration is given by
 
