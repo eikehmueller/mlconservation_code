@@ -11,6 +11,7 @@ from lagrangian import (
     DoubleWellPotentialLagrangian,
     TwoParticleLagrangian,
     KeplerLagrangian,
+    SchwarzschildLagrangian,
 )
 from dynamical_system import (
     DoubleWellPotentialSystem,
@@ -21,6 +22,7 @@ from dynamical_system import (
     DoubleWellPotentialSystem,
     TwoParticleSystem,
     KeplerSystem,
+    SchwarzschildSystem,
 )
 from lagrangian_dynamical_system import (
     LagrangianDynamicalSystem,
@@ -224,3 +226,26 @@ def test_kepler_acceleration(rng):
     acc = dynamical_system.call(np.reshape(q_qdot, [6]))
     tolerance = 1.0e-5
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
+
+
+def test_schwarzschild_acceleration(rng):
+    """Check that the acceleration is correct for the Schwarzschild Lagramgian.
+
+    Evaluate this for a random phase space vector (q,qdot)
+    """
+    r_s = 0.103
+    sigma = 0.25 * r_s  # strength of perturbation
+    lagrangian = SchwarzschildLagrangian(r_s)
+    lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
+    r0 = 10 * r_s
+    v0 = 1.26 * np.sqrt(0.5 * r_s / r0) / np.sqrt(1 - r_s / r0)
+    x0 = np.asarray([0, r0, 0, 0]) + sigma * rng.normal(4)
+    u0 = np.asarray([0, 0, v0, 0]) + sigma * rng.normal(4)
+    # make sure that the 4-velocity has norm -1
+    u0[0] = lagrangian.zero_velocity(x0[1:4], u0[1:4])
+    q_qdot = tf.constant(np.concatenate([x0, u0]), shape=[1, 8], dtype=tf.float32)
+    lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
+    dynamical_system = SchwarzschildSystem(r_s)
+    acc = dynamical_system.call(np.reshape(q_qdot, [8]))
+    tolerance = 1.0e-5
+    assert np.linalg.norm(lagrangian_acc - acc) / np.linalg.norm(acc) < tolerance

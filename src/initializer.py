@@ -1,5 +1,7 @@
+"""Various classes for initialising dynamical systems"""
 import json
 import numpy as np
+from lagrangian import SchwarzschildLagrangian
 
 
 class NormalRandomLookup:
@@ -164,3 +166,36 @@ class KeplerInitializer:
         return q + self.perturbation * rng_table.take(
             3
         ), qdot + self.perturbation * rng_table.take(3)
+
+
+class SchwarzschildConstantInitializer:
+    """Constant initializer for motion in Schwarzschld metric
+
+    Set the initial condition such that the particle is a distance
+
+      r0 = 10*r_s
+
+    away from the centre of the coordinate system and
+    the initial velocity is perpendicular to the position vector such that
+
+      v0 = 1.26*sqrt(0.5*r_s/r_0*(1-r_s/r0)^{-1})
+
+    :arg r_s: Schwarzschild radius
+    :arg perturbation: strength of perturbation; a random normal vector scaled
+                       by this number is added to the result
+    """
+
+    def __init__(self, r_s=1.0, perturbation=0):
+        self.r_s = r_s
+        self.perturbation = perturbation
+
+    def draw(self):
+        """Draw a new sample from the exact solution of the Kepler problem"""
+        rng_table = NormalRandomLookup()
+        r0 = 10 * self.r_s
+        v0 = 1.26 * np.sqrt(0.5 * self.r_s / r0) / np.sqrt(1 - self.r_s / r0)
+        x0 = np.asarray([0, r0, 0, 0]) + self.perturbation * rng_table.take(4)
+        u0 = np.asarray([0, 0, v0, 0]) + self.perturbation * rng_table.take(4)
+        # make sure that the 4-velocity has norm -1
+        u0[0] = SchwarzschildLagrangian(self.r_s).zero_velocity(x0[1:4], u0[1:4])
+        return x0, u0

@@ -16,6 +16,7 @@ from dynamical_system import (
     DoubleWellPotentialSystem,
     TwoParticleSystem,
     KeplerSystem,
+    SchwarzschildSystem,
 )
 from common import harmonic_oscillator_matrices, rng
 from time_integrator import ForwardEulerIntegrator, RK4Integrator
@@ -91,6 +92,13 @@ def kepler_system():
     return KeplerSystem(mass, alpha)
 
 
+@pytest.fixture
+def schwarzschild_system():
+    """Construct Schwarzschild system object"""
+    r_s = 1.17
+    return SchwarzschildSystem(r_s)
+
+
 @pytest.fixture(
     params=[
         "harmonic_oscillator_system",
@@ -101,6 +109,7 @@ def kepler_system():
         "double_well_potential_system",
         "two_particle_system",
         "kepler_system",
+        "schwarzschild_system",
     ]
 )
 def dynamical_system(request):

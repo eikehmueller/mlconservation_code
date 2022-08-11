@@ -287,3 +287,58 @@ class KeplerLagrangian(Lagrangian):
         x_sq = tf.reduce_sum(tf.multiply(x, x), axis=1)
         u_sq = tf.reduce_sum(tf.multiply(u, u), axis=1)
         return 0.5 * self.mass * u_sq + self.alpha / tf.sqrt(x_sq)
+
+
+class SchwarzschildLagrangian(Lagrangian):
+    """Implements the Lagrangian of a particle moving in the Schwarzschild metric
+
+      L = -(1-r_s/r)*(dx^0/dt)^2 + u^2 - r_s/r*(1-r_s/r)^{-1} (x.u)^2/r^2
+
+    where position x and velocity u are 3-dimensional vectors
+
+    :arg r_s: Schwarzschild radius
+    """
+
+    def __init__(self, r_s=1.0):
+        super().__init__(4)
+        self.r_s = float(r_s)
+        assert self.r_s > 0
+
+    def zero_velocity(self, x_spat, v_spat):
+        """Compute the zero component of the four-velocity u = (v_t,v_x,v_y,v_z) such
+        that it satisfies u^2 = -1 in the Schwarzschild metric.
+
+        For this, we need: v_t^2 = (1 + r_s/(r*(1-r_s/r))*(v.x)^2/r^2 + v^2 )/(1-r_s/r)
+
+        Returns the zero-component u^0.
+
+        :arg x_spat: position (x,y,z) as a three-vector
+        :arg v_spat: velocity (v_x,v_y,v_z) as a three-vector
+        :arg r_s: Schwarzschild radius
+        """
+        # distance r from the origin
+        r_nrm = np.linalg.norm(x_spat)
+        # norm of three-velocity
+        v_nrm = np.linalg.norm(v_spat)
+        # radial component of three-velocity
+        v_r = np.dot(v_spat, x_spat) / r_nrm
+        return np.sqrt(
+            (1 + self.r_s / (r_nrm * (1 - self.r_s / r_nrm)) * v_r**2 + v_nrm**2)
+            / (1 - self.r_s / r_nrm)
+        )
+
+    def __call__(self, inputs):
+        # Extract position and velocity
+        x_u = tf.unstack(inputs, axis=-1)
+        x = tf.stack(x_u[1:4], axis=-1)
+        u = tf.stack(x_u[5:8], axis=-1)
+        dx0_dt = tf.stack([x_u[4]], axis=-1)
+        x_sq = tf.reduce_sum(tf.multiply(x, x), axis=-1)
+        u_sq = tf.reduce_sum(tf.multiply(u, u), axis=-1)
+        x_dot_u = tf.reduce_sum(tf.multiply(u, x), axis=-1)
+        rs_over_r = self.r_s / tf.sqrt(x_sq)
+        return (
+            -(1 - rs_over_r) * tf.multiply(dx0_dt, dx0_dt)
+            + u_sq
+            + tf.multiply(x_dot_u, x_dot_u) * rs_over_r / (x_sq * (1 - rs_over_r))
+        )

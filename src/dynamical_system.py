@@ -471,3 +471,60 @@ class KeplerSystem(DynamicalSystem):
         q_sq = np.sum(y[:3] ** 2)
         inv_q_three_half = 1.0 / (q_sq * np.sqrt(q_sq))
         return -self.alpha / self.mass * inv_q_three_half * y[:3]
+
+
+class SchwarzschildSystem(DynamicalSystem):
+    """Motion of a relativistic particle in the Schwarzschild metric
+
+    Let q = (x^0,x) and dot(q) = (dx^0/dt,u), where x, u are the contra-variant position and
+    velocity and write r = |x|. Then
+
+      d^2x^j/dt^2 = -r_s/(2*r^3)*(1+3*(r^2*u^2-(x.u)^2)/r^2) * x^j  for j=1,2,3
+      d^2x^0/dt^2 = r_s/(2*r)*(1-r_s/r)^{-1} (x.u)/r^2 dx^0/dt
+
+    :arg r_s: Schwarzschild radius
+    """
+
+    def __init__(self, r_s=1.0):
+        super().__init__(4)
+        self.r_s = float(r_s)
+        assert self.r_s > 0
+        self.header_code = "#include <math.h>"
+        self.preamble_code = "double r_sq, u_sq, x_dot_u, rs_over_r, r_inv_sq, tmp_x;"
+        self.acceleration_code = f"""
+        r_sq = 0;
+        u_sq = 0;
+        x_dot_u = 0;
+        for (int j=1;j<{self.dim};++j) {{
+            r_sq += q[j]*q[j];
+            u_sq += qdot[j]*qdot[j];
+            x_dot_u += q[j]*qdot[j];
+        }}
+        r_inv_sq = 1.0/r_sq;
+        rs_over_r = ({self.r_s})*sqrt(r_inv_sq);
+        tmp_x = -0.5*rs_over_r*r_inv_sq*(1+3*(r_sq*u_sq-x_dot_u*x_dot_u)*r_inv_sq);
+        for (int j=1;j<{self.dim};++j)
+            acceleration[j] = tmp_x*q[j];
+        acceleration[0] = -rs_over_r/(1-rs_over_r)*x_dot_u*r_inv_sq*qdot[0];
+        """
+
+    def call(self, y):
+        """Return the acceleration
+
+        :arg y: position and velocity vector y = (x^0,x^1,x^2,x^3,u^0,u^1,u^2,u^3)
+        """
+        r_sq = np.sum(y[1:4] ** 2)
+        u_sq = np.sum(y[5:8] ** 2)
+        x_dot_u = np.sum(y[1:4] * y[5:8])
+        r_inv_sq = 1 / r_sq
+        rs_over_r = self.r_s * np.sqrt(r_inv_sq)
+        acceleration = np.zeros(shape=[4])
+        acceleration[1:4] = (
+            -0.5
+            * rs_over_r
+            * r_inv_sq
+            * (1 + 3 * (r_sq * u_sq - x_dot_u**2) * r_inv_sq)
+            * y[1:4]
+        )
+        acceleration[0] = -rs_over_r / (1 - rs_over_r) * x_dot_u * r_inv_sq * y[4]
+        return acceleration
