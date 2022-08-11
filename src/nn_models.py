@@ -1,9 +1,9 @@
 import os
 import errno
 import json
+from itertools import combinations_with_replacement
 import numpy as np
 import tensorflow as tf
-from itertools import combinations_with_replacement
 from auxilliary import ndarrayDecoder, ndarrayEncoder
 from lagrangian_dynamical_system import LagrangianDynamicalSystem
 from nn_layers import RotationallyInvariantLayer
@@ -63,7 +63,7 @@ class NNLagrangian(tf.keras.layers.Layer):
         with open(os.path.join(filepath, "weights.json"), "r", encoding="utf8") as f:
             layer_list = json.load(f, cls=ndarrayDecoder)
         for layer_spec in layer_list:
-            layer_cls = eval(layer_spec["class"])
+            layer_cls = eval(layer_spec["class"])  # pylint: disable=eval-used
             config = layer_spec["config"]
             weights = layer_spec["weights"]
             layer = layer_cls.from_config(config)
@@ -71,7 +71,7 @@ class NNLagrangian(tf.keras.layers.Layer):
             model.dense_layers.append(layer)
         # Call model once to initialise layer shapes
         inputs = tf.constant(np.zeros([1, 2 * model.dim]))
-        outputs = model(inputs)
+        _ = model(inputs)
         # Now set the layer weights
         for layer in model.dense_layers:
             layer.set_weights(layer_weights[layer.name])
