@@ -3,6 +3,7 @@ import errno
 import json
 import numpy as np
 import tensorflow as tf
+from itertools import combinations_with_replacement
 from auxilliary import ndarrayDecoder, ndarrayEncoder
 from lagrangian_dynamical_system import LagrangianDynamicalSystem
 from nn_layers import RotationallyInvariantLayer
@@ -168,7 +169,7 @@ class SingleParticleNNLagrangian(NNLagrangian):
     If in addition reflection_invariant is True, then we also assume invariance under reflections,
     i.e. the larger group O(d)
 
-    :arg dim: dimension d = number of spins
+    :arg dim: space dimension d
     :arg dense_layers: intermediate dense layers
     :arg rotation_invariant: enforce rotational invariance
     :arg reflection_invariant: enforce invariance under reflections
@@ -231,6 +232,79 @@ class SingleParticleNNLagrangian(NNLagrangian):
                 angular_momentum.append(
                     tf.multiply(grad_L[self.dim + j], q_qdot[k])
                     - tf.multiply(grad_L[self.dim + k], q_qdot[j])
+                )
+        return angular_momentum
+
+
+class SchwarzschildNNLagrangian(NNLagrangian):
+    """Neural network representation of Lagrangian for a single relativistc particle
+    moving in a rotationally invariant metric
+
+    If rotation_invariant is True, invariance under spatial rotations (i.e. the O(3) group)
+    is assumed. In this case, the invariants are the temporal components of the four-dimensional
+    position- and velocity vectors as well as any dot-products between the three vectors.
+
+    :arg dense_layers: intermediate dense layers
+    :arg rotation_invariant: enforce rotational invariance
+    """
+
+    def __init__(self, dense_layers, rotation_invariant=True, **kwargs):
+        super().__init__(**kwargs)
+        self.dim = 4
+        self.rotation_invariant = rotation_invariant
+        # Add final layer
+        self.dense_layers = [] if dense_layers is None else dense_layers
+        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
+
+    def call(self, inputs):
+        """Evaluate the Lagrangian for a given vector (q,qdot)
+
+        :arg inputs: 2d-dimensional phase space vector (q,qdot)
+        """
+        if self.rotation_invariant:
+            q_qdot = tf.unstack(inputs, axis=-1)
+            # temporal component and its derivative
+            t = q_qdot[0]
+            t_dot = q_qdot[4]
+            # three-dimensional position and three-velocity
+            x_spat = tf.stack(q_qdot[1:4], axis=-1)
+            v_spat = tf.stack(q_qdot[5:8], axis=-1)
+            # construct the five invariants
+            invariants = [
+                tf.reduce_sum(tf.multiply(*pair), axis=-1)
+                for pair in list(combinations_with_replacement([x_spat, v_spat], 2))
+            ] + [t, t_dot]
+            x = tf.stack(invariants, axis=-1)
+        else:
+            x = inputs
+        for layer in self.dense_layers:
+            x = layer(x)
+        return x
+
+    def get_config(self):
+        """Get the model configuration"""
+        return {
+            "rotation_invariant": self.rotation_invariant,
+        }
+
+    @property
+    def ninvariant(self):
+        """Number of invariants that are computed by the invariant() method"""
+        return 3
+
+    @tf.function
+    def invariant(self, inputs):
+        """compute the three components of angular momentum"""
+        if len(inputs.shape) < 2:
+            inputs = tf.reshape(inputs, shape=[1, 8])
+        angular_momentum = []
+        q_qdot = tf.unstack(inputs, axis=-1)
+        grad_L = tf.unstack(tf.gradients(self.call(inputs), inputs)[0], axis=-1)
+        for j in range(1, 4):
+            for k in range(j + 1, 4):
+                angular_momentum.append(
+                    tf.multiply(grad_L[4 + j], q_qdot[k])
+                    - tf.multiply(grad_L[4 + k], q_qdot[j])
                 )
         return angular_momentum
 

@@ -12,6 +12,7 @@ from nn_models import (
     XYModelNNLagrangian,
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
+    SchwarzschildNNLagrangian,
     LagrangianModel,
 )
 from common import rng
@@ -221,4 +222,24 @@ def test_two_particle_lagrangian_invariance(
         [rotate(translate(x1)), rotate(translate(x2)), rotate(u1), rotate(u2)], axis=1
     )
     dL = nn_lagrangian(X_transformed) - nn_lagrangian(X)
+    assert np.linalg.norm(dL) < tolerance
+
+
+def test_schwarzschild_lagrangian_rotation_invariance(rng, dense_layers):
+    """Check that the neural network Lagrangian has the same value
+    if the three-vector parts of the input vectors are rotated.
+    """
+    nn_lagrangian = SchwarzschildNNLagrangian(dense_layers, rotation_invariant=True)
+    # number of samples to check
+    n_samples = 4
+    # tolerance for tests
+    tolerance = 1.0e-5
+    q = rng.normal(size=(n_samples, 4))
+    qdot = rng.normal(size=(n_samples, 4))
+    R_rot = np.identity(4)
+    R_rot[1:, 1:] = ortho_group.rvs(3, random_state=rng)
+    X = np.concatenate([q, qdot], axis=1)
+    rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v)
+    X_rotated = np.concatenate([rotate(q), rotate(qdot)], axis=1)
+    dL = nn_lagrangian(X_rotated) - nn_lagrangian(X)
     assert np.linalg.norm(dL) < tolerance
