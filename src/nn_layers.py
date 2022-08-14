@@ -1,4 +1,8 @@
-"""User defined neural network layers"""
+"""User defined neural network layers
+
+Currently this only implements a layer which can enforce rotation symmetry by reducing
+the inputs to those combinations which are rotationally invariant.
+"""
 import math
 from itertools import permutations, combinations, combinations_with_replacement
 import tensorflow as tf

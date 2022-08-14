@@ -1,3 +1,13 @@
+"""Contains neural network based Lagrangians for several physical systems
+
+Each Lagrangian is implemented as a subclass of tf.keras.layers.Layer.
+The exact structure of a Lagrangian, for example its inputs, depends on the dynamical
+system which it is trained for and the symmeries that we want to preserve.
+
+The LagrangianModel class wraps the Lagrangian dynamical system from
+lagrangian_dynamical_system.py as a subclass of tf.keras.models.Model.
+"""
+
 import os
 import errno
 import json

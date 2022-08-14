@@ -1,5 +1,11 @@
 """Main script for training Neural network model
 
+The models are trained on (noisy) synthetic data, which is obtained by solving the true
+dynamical system with a four order Runge Kutta (RK4) integrator; for the Kepler system (motion
+in a 1/r potential) the exact solution is known, so this is used instead in this case.
+During training, the mean square error between the predicted acceleration and the true
+acceleration is minimised.
+
 Parameters are set via a toml file which is passed as a command line argument:
 
 python train_model.py --parameterfile=PARAMETERFILE
