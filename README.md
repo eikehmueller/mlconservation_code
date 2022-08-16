@@ -46,7 +46,7 @@ python src/train_model.py --parameterfile=PARAMETERFILE
 where `PARAMETERFILE` is the name of the `.toml` file with the parameters. If you leave out the `--parameterfile` flag, this defaults to `training_parameters.toml`.
 
 ### Evaluating and visualising trained models
-To evaluate the trained models and assess their performance, use [EvaluateModel.ipynb](EvaluateModel.ipynb) and [EvaluateKeplerModel.ipynb](EvaluateKeplerModel.ipynb)
+To evaluate the trained models and assess their performance, use [EvaluateModel.ipynb](./src/EvaluateModel.ipynb) and [EvaluateKeplerModel.ipynb](./src/EvaluateKeplerModel.ipynb)
 
 ## Testing
 Tests are collected in the [tests subdirectory](tests). To run all tests use
