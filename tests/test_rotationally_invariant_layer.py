@@ -4,8 +4,8 @@ import numpy as np
 import tensorflow as tf
 from itertools import permutations, combinations, combinations_with_replacement
 from sympy.combinatorics.permutations import Permutation
-from nn_layers import RotationallyInvariantLayer
-import common
+from conservative_nn.nn_layers import RotationallyInvariantLayer
+
 from common import rng
 
 

@@ -1,14 +1,8 @@
 """Test numerical time integrators"""
 import numpy as np
 import pytest
-import os
-import sys
 
-sys.path.insert(
-    0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
-)
-
-from dynamical_system import (
+from conservative_nn.dynamical_system import (
     HarmonicOscillatorSystem,
     XYModelSystem,
     DoublePendulumSystem,
@@ -18,8 +12,8 @@ from dynamical_system import (
     KeplerSystem,
     SchwarzschildSystem,
 )
+from conservative_nn.time_integrator import ForwardEulerIntegrator, RK4Integrator
 from common import harmonic_oscillator_matrices, rng
-from time_integrator import ForwardEulerIntegrator, RK4Integrator
 
 
 @pytest.fixture

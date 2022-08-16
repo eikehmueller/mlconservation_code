@@ -1,7 +1,11 @@
 """Code for generating trajectories while monitoring quantities of interest"""
 import numpy as np
-from time_integrator import RK4Integrator
-from dynamical_system import TwoParticleSystem, DoubleWellPotentialSystem, KeplerSystem
+from conservative_nn.time_integrator import RK4Integrator
+from conservative_nn.dynamical_system import (
+    TwoParticleSystem,
+    DoubleWellPotentialSystem,
+    KeplerSystem,
+)
 
 
 class Monitor:

@@ -2,7 +2,7 @@
 import os
 import json
 import numpy as np
-from lagrangian import SchwarzschildLagrangian
+from conservative_nn.lagrangian import SchwarzschildLagrangian
 
 
 class NormalRandomLookup:

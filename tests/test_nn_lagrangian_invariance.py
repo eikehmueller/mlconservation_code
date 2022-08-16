@@ -6,9 +6,9 @@ import pytest
 import numpy as np
 import tensorflow as tf
 from scipy.stats import ortho_group, special_ortho_group
-import common
-from time_integrator import RK4Integrator
-from nn_models import (
+
+from conservative_nn.time_integrator import RK4Integrator
+from conservative_nn.nn_models import (
     XYModelNNLagrangian,
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
