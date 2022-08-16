@@ -33,10 +33,10 @@ setup(
     packages=["conservative_nn"],
     package_dir={"": "src"},
     package_data={"conservative_nn": ["random_normal_table.json"]},
-    requires=requirements,
     install_requires=[
         'importlib-metadata; python_version == "3.8"',
-    ],
+    ]
+    + requirements,
     url="https://github.com/eikehmueller/mlconservation_code",
     classifiers=[
         "Programming Language :: Python :: 3",
