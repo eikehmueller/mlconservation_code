@@ -14,9 +14,9 @@ import json
 from itertools import combinations_with_replacement
 import numpy as np
 import tensorflow as tf
-from auxilliary import ndarrayDecoder, ndarrayEncoder
-from lagrangian_dynamical_system import LagrangianDynamicalSystem
-from nn_layers import RotationallyInvariantLayer
+from conservative_nn.auxilliary import ndarrayDecoder, ndarrayEncoder
+from conservative_nn.nn_layers import RotationallyInvariantLayer
+from conservative_nn.lagrangian_dynamical_system import LagrangianDynamicalSystem
 
 
 class NNLagrangian(tf.keras.layers.Layer):

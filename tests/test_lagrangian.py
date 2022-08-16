@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 import tensorflow as tf
-import common
-from lagrangian import (
+
+from conservative_nn.lagrangian import (
     DoubleWellPotentialLagrangian,
     HarmonicOscillatorLagrangian,
     XYModelLagrangian,
@@ -13,7 +13,7 @@ from lagrangian import (
     KeplerLagrangian,
     SchwarzschildLagrangian,
 )
-from dynamical_system import (
+from conservative_nn.dynamical_system import (
     DoubleWellPotentialSystem,
     HarmonicOscillatorSystem,
     RelativisticChargedParticleSystem,
@@ -24,7 +24,7 @@ from dynamical_system import (
     KeplerSystem,
     SchwarzschildSystem,
 )
-from lagrangian_dynamical_system import (
+from conservative_nn.lagrangian_dynamical_system import (
     LagrangianDynamicalSystem,
     RelativisticChargedParticleLagrangianDynamicalSystem,
 )

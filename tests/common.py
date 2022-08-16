@@ -1,13 +1,6 @@
 """Common functionality used by all tests"""
 import numpy as np
 import pytest
-import os
-import sys
-
-# Workaround to make sure that tests can import from the src directory
-sys.path.insert(
-    0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
-)
 
 
 def harmonic_oscillator_matrices(dim):

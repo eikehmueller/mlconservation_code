@@ -4,7 +4,7 @@ These classes can be used to construct data generator for training the neural ne
 """
 import numpy as np
 import tensorflow as tf
-from time_integrator import RK4Integrator
+from conservative_nn.time_integrator import RK4Integrator
 
 
 class DynamicalSystemDataGenerator:

@@ -4,9 +4,9 @@ Check that the analytical solution is consistent with the corresponding dynamica
 """
 
 import numpy as np
-import common
-from kepler import KeplerSolution  # pylint: disable=wrong-import-position
-from dynamical_system import KeplerSystem  # pylint: disable=wrong-import-position
+
+from conservative_nn.kepler import KeplerSolution
+from conservative_nn.dynamical_system import KeplerSystem
 
 
 def test_kepler_acceleration_analytical():

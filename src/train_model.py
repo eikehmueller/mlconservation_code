@@ -17,24 +17,27 @@ import argparse
 import toml
 import tensorflow as tf
 
-from data_generator import DynamicalSystemDataGenerator, KeplerDataGenerator
-from dynamical_system import (
+from conservative_nn.data_generator import (
+    DynamicalSystemDataGenerator,
+    KeplerDataGenerator,
+)
+from conservative_nn.dynamical_system import (
     DoubleWellPotentialSystem,
     TwoParticleSystem,
     SchwarzschildSystem,
 )
-from nn_models import (
+from conservative_nn.nn_models import (
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
     SchwarzschildNNLagrangian,
     LagrangianModel,
 )
-from initializer import (
+from conservative_nn.initializer import (
     SingleParticleConstantInitializer,
     TwoParticleConstantInitializer,
     SchwarzschildConstantInitializer,
 )
-from kepler import KeplerSolution
+from conservative_nn.kepler import KeplerSolution
 
 # Parse command line arguments
 parser = argparse.ArgumentParser()
