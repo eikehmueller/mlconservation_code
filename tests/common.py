@@ -1,14 +1,13 @@
+"""Common functionality used by all tests"""
 import numpy as np
 import pytest
 import os
 import sys
 
-# Make sure that tests can import from the src directory
+# Workaround to make sure that tests can import from the src directory
 sys.path.insert(
     0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
 )
-
-"""Common functionality used by all tests"""
 
 
 def harmonic_oscillator_matrices(dim):
@@ -27,5 +26,5 @@ def harmonic_oscillator_matrices(dim):
 
 @pytest.fixture
 def rng():
-    """Return random generator that can be used by all tests"""
+    """Return random generator fixture that can be used by all tests"""
     return np.random.default_rng(21494917)

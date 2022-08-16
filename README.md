@@ -23,7 +23,7 @@ The main Python files are collected in the [src](./src) directory. The [assets](
 
 ## Running the code
 ### Training the neural networks
-The neural network models can be trained with the [train_model.py](src/train_model.py) script, which reads its parameters from a `.toml` configuration file. You might want to copy and modify the template in (training_parameters_template.toml)[training_parameters_template.toml]. To run the code, use
+The neural network models can be trained with the [train_model.py](src/train_model.py) script, which reads its parameters from a `.toml` configuration file. You might want to copy and modify [the provided template file](training_parameters_template.toml). To run the code, use
 
 ```
 python src/train_model.py --parameterfile=PARAMETERFILE
