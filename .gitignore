@@ -3,4 +3,5 @@ generated_code
 *.pyc
 generated_code
 events.*
-checkpoint*
+*checkpoint*
+*egg-info*
