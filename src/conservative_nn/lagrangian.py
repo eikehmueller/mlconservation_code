@@ -91,10 +91,11 @@ class XYModelLagrangian(Lagrangian):
         qdot = tf.stack(q_qdot[self.dim :], axis=1)
         T_kin = 0.5 * self.a_lat * tf.reduce_sum(tf.multiply(qdot, qdot), axis=1)
         V_pot = (
-            1.0
+            -1.0
             / self.a_lat
-            * tf.reduce_sum(-tf.cos(q - tf.roll(q, shift=-1, axis=1)) + 1.0, axis=1)
+            * tf.reduce_sum(tf.cos(q - tf.roll(q, shift=-1, axis=1)) - 1.0, axis=1)
         )
+
         return T_kin - V_pot
 
 
