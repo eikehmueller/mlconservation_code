@@ -140,7 +140,7 @@ if parameters["system"]["name"] == "Kepler":
         mass=parameters["system_specific"]["kepler"]["mass"],
         alpha=parameters["system_specific"]["kepler"]["alpha"],
         excentricity=parameters["system_specific"]["kepler"]["excentricity"],
-        energy=parameters["system_specific"]["kepler"]["energy"],
+        L_angular=parameters["system_specific"]["kepler"]["angular_momentum"],
     )
     data_generator = KeplerDataGenerator(
         kepler_solution, sigma=parameters["system"]["sigma"]
@@ -164,6 +164,7 @@ learning_rate = tf.keras.optimizers.schedules.CosineDecay(
     EPOCHS * STEPS_PER_EPOCH,
     alpha=1.0e-2,
 )
+# learning_rate = parameters["training"]["initial_learning_rate"]
 
 # ---- Compile model ----
 model.compile(
