@@ -13,7 +13,9 @@ title = "Template parameters"
     batch_size = 16
     epochs = 100
     steps_per_epoch = 100
-    initial_learning_rate = 1.0E-4
+    learning_rate = 1.0E-4
+    schedule = "Constant"   # training schedule, can be "Constant" or "CosineDecay"
+    alpha = 1.0E-2          # alpha parameter in CosineDecay
     
 # Name of file to save trained model to
 [saved_model]

@@ -159,12 +159,18 @@ train_batches = data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_
 # ---- Construct NN model ----
 model = LagrangianModel(nn_lagrangian)
 
-learning_rate = tf.keras.optimizers.schedules.CosineDecay(
-    parameters["training"]["initial_learning_rate"],
-    EPOCHS * STEPS_PER_EPOCH,
-    alpha=1.0e-2,
-)
-# learning_rate = parameters["training"]["initial_learning_rate"]
+if parameters["training"]["schedule"] == "Constant":
+    learning_rate = parameters["training"]["learning_rate"]
+elif parameters["training"]["schedule"] == "CosineDecay":
+    learning_rate = tf.keras.optimizers.schedules.CosineDecay(
+        parameters["training"]["learning_rate"],
+        EPOCHS * STEPS_PER_EPOCH,
+        alpha=parameters["training"]["alpha"],
+    )
+else:
+    schedule = parameters["training"]["schedule"]
+    raise RuntimeError(f"Unknown traning schedule {schedule}")
+
 
 # ---- Compile model ----
 model.compile(
