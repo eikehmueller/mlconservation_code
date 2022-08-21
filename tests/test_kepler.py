@@ -15,11 +15,15 @@ def test_kepler_acceleration_analytical():
     mass = 0.983
     alpha = 1.32
     excentricity = 0.76
-    energy = -0.98
+    angular_momentum = 1.07
     phi0 = 3.5
     phi = 1.8
     kepler_solution = KeplerSolution(
-        mass=mass, alpha=alpha, excentricity=excentricity, energy=energy, phi0=phi0
+        mass=mass,
+        alpha=alpha,
+        excentricity=excentricity,
+        angular_momentum=angular_momentum,
+        phi0=phi0,
     )
     dynamical_system = KeplerSystem(mass=mass, alpha=alpha)
     q = kepler_solution.position(phi)

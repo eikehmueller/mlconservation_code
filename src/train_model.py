@@ -67,7 +67,7 @@ print("----------------- end ------------------------")
 EPOCHS = parameters["training"]["epochs"]
 STEPS_PER_EPOCH = parameters["training"]["steps_per_epoch"]
 BATCH_SIZE = parameters["training"]["batch_size"]
-SHUFFLE_BUFFER_SIZE = 4 * BATCH_SIZE
+SHUFFLE_BUFFER_SIZE = 32 * BATCH_SIZE
 
 rotation_invariant = bool(parameters["symmetry"]["rotation_invariant"])
 translation_invariant = bool(parameters["symmetry"]["translation_invariant"])
@@ -140,7 +140,7 @@ if parameters["system"]["name"] == "Kepler":
         mass=parameters["system_specific"]["kepler"]["mass"],
         alpha=parameters["system_specific"]["kepler"]["alpha"],
         excentricity=parameters["system_specific"]["kepler"]["excentricity"],
-        energy=parameters["system_specific"]["kepler"]["energy"],
+        angular_momentum=parameters["system_specific"]["kepler"]["angular_momentum"],
     )
     data_generator = KeplerDataGenerator(
         kepler_solution, sigma=parameters["system"]["sigma"]
@@ -159,11 +159,18 @@ train_batches = data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_
 # ---- Construct NN model ----
 model = LagrangianModel(nn_lagrangian)
 
-learning_rate = tf.keras.optimizers.schedules.CosineDecay(
-    parameters["training"]["initial_learning_rate"],
-    EPOCHS * STEPS_PER_EPOCH,
-    alpha=1.0e-2,
-)
+if parameters["training"]["schedule"] == "Constant":
+    learning_rate = parameters["training"]["learning_rate"]
+elif parameters["training"]["schedule"] == "CosineDecay":
+    learning_rate = tf.keras.optimizers.schedules.CosineDecay(
+        parameters["training"]["learning_rate"],
+        EPOCHS * STEPS_PER_EPOCH,
+        alpha=parameters["training"]["alpha"],
+    )
+else:
+    schedule = parameters["training"]["schedule"]
+    raise RuntimeError(f"Unknown traning schedule {schedule}")
+
 
 # ---- Compile model ----
 model.compile(

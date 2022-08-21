@@ -1,12 +1,13 @@
 """Classes for deriving equations of motion from a Lagrangian via automatic differentiation
 
 The constructor accepts a lagrangian object, which can for example be an instance of
-one of the classes in nn_models.py. It then uses automatic differentiation to 
+one of the classes in nn_models.py. It then uses automatic differentiation to
 obtain the acceleration as a function of the position and velocity.
 
 The class LagrangianDynamicalSystem represent a generic dynamical system and assumes that
 the Lagrangian depends only on position and velocity. In contrast
-RelativisticChargedParticleLagrangianDynamicalSystem assumes that the Lagrangian also explicitly depends on the vector potential A.
+RelativisticChargedParticleLagrangianDynamicalSystem assumes that the Lagrangian also
+explicitly depends on the vector potential A.
 """
 
 import tensorflow as tf

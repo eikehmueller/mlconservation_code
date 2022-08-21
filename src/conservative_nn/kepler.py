@@ -13,19 +13,18 @@ class KeplerSolution:
     :arg mass: particle mass
     :arg alpha: strength of potential
     :arg excentricity: excentricity of the trajectory
-    :arg energy: energy (must be negative)
+    :arg angular_momentum: angular momentum
     :arg phi0: initial angle
     """
 
-    def __init__(self, mass=1.0, alpha=1.0, excentricity=0.0, energy=-1.0, phi0=0.0):
+    def __init__(
+        self, mass=1.0, alpha=1.0, excentricity=0.0, angular_momentum=1.0, phi0=0.0
+    ):
         self.mass = mass
         self.alpha = alpha
         self.excentricity = excentricity
-        self.energy = energy
         self.phi0 = phi0
-        self.L_angular = self.alpha * np.sqrt(
-            -0.5 * self.mass / self.energy * (1 - self.excentricity**2)
-        )
+        self.angular_momentum = angular_momentum
 
     def _u(self, phi):
         """Compute the function u(phi) = 1/r(phi) for a given angle phi
@@ -35,7 +34,7 @@ class KeplerSolution:
         return (
             self.alpha
             * self.mass
-            / self.L_angular**2
+            / self.angular_momentum**2
             * (1 + self.excentricity * np.cos(phi - self.phi0))
         )
 
@@ -46,7 +45,7 @@ class KeplerSolution:
         """
         phi = np.asarray(phi)
         r = (
-            self.L_angular**2
+            self.angular_momentum**2
             / (self.alpha * self.mass)
             * 1
             / (1 + self.excentricity * np.cos(phi - self.phi0))
@@ -62,8 +61,13 @@ class KeplerSolution:
         """
         phi = np.asarray(phi)
         u = self._u(phi)
-        rdot = self.alpha / self.L_angular * self.excentricity * np.sin(phi - self.phi0)
-        r_phidot = self.L_angular / self.mass * u
+        rdot = (
+            self.alpha
+            / self.angular_momentum
+            * self.excentricity
+            * np.sin(phi - self.phi0)
+        )
+        r_phidot = self.angular_momentum / self.mass * u
         return np.stack(
             [
                 rdot * np.cos(phi) - r_phidot * np.sin(phi),
@@ -88,7 +92,7 @@ class KeplerSolution:
             * u**2
             * np.cos(phi - self.phi0)
         )
-        phidot = self.L_angular / self.mass * u**2
+        phidot = self.angular_momentum / self.mass * u**2
         acc = rddot - r * phidot**2
         return np.stack(
             [acc * np.cos(phi), acc * np.sin(phi), np.zeros(shape=phi.shape)], axis=0
