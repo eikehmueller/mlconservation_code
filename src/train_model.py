@@ -140,7 +140,7 @@ if parameters["system"]["name"] == "Kepler":
         mass=parameters["system_specific"]["kepler"]["mass"],
         alpha=parameters["system_specific"]["kepler"]["alpha"],
         excentricity=parameters["system_specific"]["kepler"]["excentricity"],
-        L_angular=parameters["system_specific"]["kepler"]["angular_momentum"],
+        angular_momentum=parameters["system_specific"]["kepler"]["angular_momentum"],
     )
     data_generator = KeplerDataGenerator(
         kepler_solution, sigma=parameters["system"]["sigma"]
