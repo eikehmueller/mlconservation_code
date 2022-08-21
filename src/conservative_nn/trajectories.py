@@ -9,17 +9,21 @@ from conservative_nn.dynamical_system import (
 
 
 class Monitor:
-    def __init__(self, ncomp):
+    def __init__(self):
         """Class for accumulating data over a trajectory
 
         :arg n: components of quantity to monitor
         """
-        self.ncomp = ncomp
-        self.reset(0)
+        self.reset()
 
-    def reset(self, nsteps):
-        """Reset state of monitor to start new accumulation"""
-        self.j_step = 0
+    def reset(self):
+        """Reset monitor"""
+        self._data = []
+
+    @property
+    def data(self):
+        """Get data as numpy array"""
+        return np.asarray(self._data).transpose()
 
 
 class PositionMonitor(Monitor):
@@ -30,29 +34,15 @@ class PositionMonitor(Monitor):
     :arg dim: dimension of dynamical system
     """
 
-    def __init__(self, dim):
-        super().__init__(dim)
-
-    def reset(self, nsteps):
-        """reset the monitor to start new accumulation
-
-        :arg nsteps: number of steps
-        """
-        super().reset(nsteps)
-        self.q_all = np.zeros((self.ncomp, nsteps + 1))
-
-    @property
-    def value(self):
-        """Return monitored quantity"""
-        return self.q_all
+    def __init__(self):
+        super().__init__()
 
     def __call__(self, time_integrator):
         """Evaluate the monitor for the current state of the time_integrator
 
         :arg time_integrator: time integrator to monitor
         """
-        self.q_all[:, self.j_step] = time_integrator.q[:]
-        self.j_step += 1
+        self._data.append(list(time_integrator.q[:]))
 
 
 class InvariantMonitor(Monitor):
@@ -65,21 +55,8 @@ class InvariantMonitor(Monitor):
     """
 
     def __init__(self, lagrangian):
+        super().__init__()
         self.lagrangian = lagrangian
-        super().__init__(self.lagrangian.ninvariant)
-
-    def reset(self, nsteps):
-        """reset the monitor to start new accumulation
-
-        :arg nsteps: number of steps
-        """
-        super().reset(nsteps)
-        self.invariants = np.zeros((self.ncomp, nsteps + 1))
-
-    @property
-    def value(self):
-        """Return monitored quantity"""
-        return self.invariants
 
     def __call__(self, time_integrator):
         """Evaluate the monitor for value of the invariant of the underlying system
@@ -87,10 +64,7 @@ class InvariantMonitor(Monitor):
         :arg time_integrator: time integrator to monitor
         """
         inputs = np.concatenate([time_integrator.q, time_integrator.qdot])
-        self.invariants[:, self.j_step] = np.asarray(
-            self.lagrangian.invariant(inputs)
-        ).flatten()
-        self.j_step += 1
+        self._data.append(list(self.lagrangian.invariant(inputs)).flatten())
 
 
 class SingleParticleInvariantMonitor(Monitor):
@@ -102,27 +76,13 @@ class SingleParticleInvariantMonitor(Monitor):
     """
 
     def __init__(self, dynamical_system):
+        super().__init__()
         assert isinstance(
             dynamical_system, (DoubleWellPotentialSystem, KeplerSystem)
         ), "Monitor only works for instances of SingleParticleSystem"
         self.dynamical_system = dynamical_system
         self.mass = self.dynamical_system.mass
         self.dim = dynamical_system.dim
-        self.ninvariant = self.dim * (self.dim - 1) // 2
-        super().__init__(self.ninvariant)
-
-    def reset(self, nsteps):
-        """reset the monitor to start new accumulation
-
-        :arg nsteps: number of steps
-        """
-        super().reset(nsteps)
-        self.invariants = np.zeros((self.ninvariant, nsteps + 1))
-
-    @property
-    def value(self):
-        """Return monitored quantity"""
-        return self.invariants
 
     def __call__(self, time_integrator):
         """Evaluate the monitor for value of the invariant of the underlying system
@@ -132,13 +92,12 @@ class SingleParticleInvariantMonitor(Monitor):
         x = time_integrator.q[0 : self.dim]
         u = time_integrator.qdot[0 : self.dim]
         ell = 0
+        invariants = []
         for j in range(self.dim):
             for k in range(j + 1, self.dim):
-                self.invariants[ell, self.j_step] = self.mass * (
-                    u[j] * x[k] - u[k] * x[j]
-                )
+                invariants.append(self.mass * (u[j] * x[k] - u[k] * x[j]))
                 ell += 1
-        self.j_step += 1
+        self._data.append(invariants)
 
 
 class TwoParticleInvariantMonitor(Monitor):
@@ -150,6 +109,7 @@ class TwoParticleInvariantMonitor(Monitor):
     """
 
     def __init__(self, dynamical_system):
+        super().__init__()
         assert isinstance(
             dynamical_system, TwoParticleSystem
         ), "Monitor only works for instances of TwoParticleSystem"
@@ -158,21 +118,6 @@ class TwoParticleInvariantMonitor(Monitor):
         self.mass2 = self.dynamical_system.mass2
         self.dim = dynamical_system.dim
         self.dim_space = self.dim // 2
-        self.ninvariant = self.dim_space * (self.dim_space + 1) // 2
-        super().__init__(self.ninvariant)
-
-    def reset(self, nsteps):
-        """reset the monitor to start new accumulation
-
-        :arg nsteps: number of steps
-        """
-        super().reset(nsteps)
-        self.invariants = np.zeros((self.ninvariant, nsteps + 1))
-
-    @property
-    def value(self):
-        """Return monitored quantity"""
-        return self.invariants
 
     def __call__(self, time_integrator):
         """Evaluate the monitor for value of the invariant of the underlying system
@@ -183,18 +128,17 @@ class TwoParticleInvariantMonitor(Monitor):
         x2 = time_integrator.q[self.dim_space : 2 * self.dim_space]
         u1 = time_integrator.qdot[0 : self.dim_space]
         u2 = time_integrator.qdot[self.dim_space : 2 * self.dim_space]
+        invariants = np.zeros(self.dim * (self.dim + 1) // 2)
         # Linear momentum
-        self.invariants[: self.dim_space, self.j_step] = (
-            self.mass1 * u1[:] + self.mass2 * u2[:]
-        )
+        invariants[: self.dim_space] = self.mass1 * u1[:] + self.mass2 * u2[:]
         ell = self.dim_space
         for j in range(self.dim_space):
             for k in range(j + 1, self.dim_space):
-                self.invariants[ell, self.j_step] = self.mass1 * (
+                self.invariants[ell] = self.mass1 * (
                     u1[j] * x1[k] - u1[k] * x1[j]
                 ) + self.mass2 * (u2[j] * x2[k] - u2[k] * x2[j])
                 ell += 1
-        self.j_step += 1
+        self._data.append(list(invariants))
 
 
 class VelocitySumMonitor(Monitor):
@@ -204,28 +148,14 @@ class VelocitySumMonitor(Monitor):
     """
 
     def __init__(self):
-        super().__init__(1)
-
-    @property
-    def value(self):
-        """Return monitored quantity"""
-        return self.sum_qdot
-
-    def reset(self, nsteps):
-        """reset the monitor to start new accumulation
-
-        :arg nsteps: number of steps
-        """
-        super().reset(nsteps)
-        self.sum_qdot = np.zeros(nsteps + 1)
+        super().__init__()
 
     def __call__(self, time_integrator):
         """Evaluate the monitor for the current state of the time_integrator
 
         :arg time_integrator: time integrator to monitor
         """
-        self.sum_qdot[self.j_step] = np.sum(time_integrator.qdot[:])
-        self.j_step += 1
+        self._data.append(np.sum(time_integrator.qdot[:]))
 
 
 class TrajectoryGenerator:
@@ -246,7 +176,7 @@ class TrajectoryGenerator:
         nsteps = int(self.t_final / self.dt)
         self.t = np.zeros(nsteps + 1)
         for monitor in self.monitors:
-            monitor.reset(int(self.t_final / self.dt))
+            monitor.reset()
         self.time_integrator = RK4Integrator(self.dynamical_system, self.dt)
 
     def run(self):
