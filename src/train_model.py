@@ -84,7 +84,11 @@ dense_layers = [
 if parameters["system"]["name"] == "TwoParticle":
     dim_space = parameters["system_specific"]["two_particle"]["dim_space"]
     dim = 2 * dim_space
-    initializer = TwoParticleConstantInitializer(dim)
+    initializer = TwoParticleConstantInitializer(
+        dim,
+        mass1=parameters["system_specific"]["two_particle"]["mass"][0],
+        mass2=parameters["system_specific"]["two_particle"]["mass"][1],
+    )
     dynamical_system = TwoParticleSystem(
         dim_space,
         mass1=parameters["system_specific"]["two_particle"]["mass"][0],
