@@ -39,7 +39,7 @@ class RotationallyInvariantLayer(tf.keras.layers.Layer):
 
     @property
     def n_outputs(self):
-        "number of output tensors" ""
+        """number of output tensors"""
         n_dot_products = math.comb(self.n_tensors, 2) + self.n_tensors
         n_cross_products = math.comb(self.n_tensors, self.dim_space)
         if self.reflection_invariant:
