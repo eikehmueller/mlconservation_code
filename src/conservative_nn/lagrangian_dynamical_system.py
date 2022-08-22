@@ -42,38 +42,30 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
         self.lagrangian = lagrangian
 
     @tf.function
-    def _hessian(self, y, j, k):
-        """Helper function for computing Hessian d^2 L / (dy_j dy_k)"""
-        d_y_j = tf.unstack(tf.gradients(self.lagrangian(y), y)[0], axis=1)[j]
-        return tf.unstack(tf.gradients(d_y_j, y)[0], axis=1)[k]
+    def _hessian(self, y):
+        """Return Hessian matrix of Lagrangian for a given input.
+
+        The returned matrix is H[a,b,j,k] where a,b are batch indices
+        """
+        return tf.transpose(tf.hessians(self.lagrangian(y), y)[0], perm=[0, 2, 1, 3])
 
     @tf.function
     def div_L(self, y):
         """Gradient of Lagrangian dL/dq"""
-        dL = tf.unstack(tf.gradients(self.lagrangian(y), y)[0], axis=1)
-        return tf.stack(dL[: self.dim], axis=1)
+        dL = tf.gradients(self.lagrangian(y), y)[0]
+        return dL[..., : self.dim]
 
     @tf.function
     def J_qdotqdot(self, y):
         """d x d matrix J_{dot{q},dot{q}}"""
-        rows = []
-        for j in range(self.dim, 2 * self.dim):
-            row = []
-            for k in range(self.dim, 2 * self.dim):
-                row.append(self._hessian(y, j, k))
-            rows.append(tf.stack(row, axis=1))
-        return tf.stack(rows, axis=1)
+        H = self._hessian(y)
+        return H[..., self.dim : 2 * self.dim, self.dim : 2 * self.dim]
 
     @tf.function
     def J_qqdot(self, y):
         """d x d matrix J_{q,dot{q}}"""
-        rows = []
-        for j in range(0, self.dim):
-            row = []
-            for k in range(self.dim, 2 * self.dim):
-                row.append(self._hessian(y, j, k))
-            rows.append(tf.stack(row, axis=1))
-        return tf.stack(rows, axis=1)
+        H = self._hessian(y)
+        return H[..., 0 : self.dim, self.dim : 2 * self.dim]
 
     @tf.function
     def J_qdotqdot_inv(self, y):
@@ -86,11 +78,10 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
 
         :arg y: Phase space vector y = (q,qdot)
         """
-        q_qdot = tf.unstack(y, axis=1)
-        qdot = tf.stack(q_qdot[self.dim :], axis=1)
+        qdot = y[:, self.dim :]
         qdotdot = tf.einsum(
-            "ai,aij->aj",
-            self.div_L(y) - tf.einsum("ai,aij->aj", qdot, self.J_qqdot(y)),
+            "ai,aaij->aj",
+            self.div_L(y) - tf.einsum("ai,aaij->aj", qdot, self.J_qqdot(y)),
             self.J_qdotqdot_inv(y),
         )
         return qdotdot
