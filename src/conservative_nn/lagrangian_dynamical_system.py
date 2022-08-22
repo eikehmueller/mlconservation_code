@@ -41,19 +41,16 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
         self.dim = lagrangian.dim
         self.lagrangian = lagrangian
 
-    @tf.function
     def _hessian(self, y, j, k):
         """Helper function for computing Hessian d^2 L / (dy_j dy_k)"""
         d_y_j = tf.unstack(tf.gradients(self.lagrangian(y), y)[0], axis=1)[j]
         return tf.unstack(tf.gradients(d_y_j, y)[0], axis=1)[k]
 
-    @tf.function
     def div_L(self, y):
         """Gradient of Lagrangian dL/dq"""
         dL = tf.unstack(tf.gradients(self.lagrangian(y), y)[0], axis=1)
         return tf.stack(dL[: self.dim], axis=1)
 
-    @tf.function
     def J_qdotqdot(self, y):
         """d x d matrix J_{dot{q},dot{q}}"""
         rows = []
@@ -64,7 +61,6 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
             rows.append(tf.stack(row, axis=1))
         return tf.stack(rows, axis=1)
 
-    @tf.function
     def J_qqdot(self, y):
         """d x d matrix J_{q,dot{q}}"""
         rows = []
@@ -75,7 +71,6 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
             rows.append(tf.stack(row, axis=1))
         return tf.stack(rows, axis=1)
 
-    @tf.function
     def J_qdotqdot_inv(self, y):
         """d x d matrix (J_{dot{q},dot{q}})^{-1}"""
         return tf.linalg.pinv(self.J_qdotqdot(y))
