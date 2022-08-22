@@ -39,7 +39,7 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
     def __init__(self, lagrangian):
         super().__init__()
         self.dim = lagrangian.dim
-        self.lagrangian = lagrangian
+        self.lagrangian = tf.function(lagrangian)
 
     @tf.function
     def _hessian(self, y):
@@ -78,13 +78,11 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
 
         :arg y: Phase space vector y = (q,qdot)
         """
-        qdot = y[:, self.dim :]
-        qdotdot = tf.einsum(
+        return tf.einsum(
             "ai,aaij->aj",
-            self.div_L(y) - tf.einsum("ai,aaij->aj", qdot, self.J_qqdot(y)),
+            self.div_L(y) - tf.einsum("ai,aaij->aj", y[:, self.dim :], self.J_qqdot(y)),
             self.J_qdotqdot_inv(y),
         )
-        return qdotdot
 
 
 class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer):
