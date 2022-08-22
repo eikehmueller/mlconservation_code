@@ -63,7 +63,7 @@ class InvariantMonitor(Monitor):
         :arg time_integrator: time integrator to monitor
         """
         inputs = np.concatenate([time_integrator.q, time_integrator.qdot])
-        self._data.append(list(self.lagrangian.invariant(inputs)).flatten())
+        self._data.append(list(self.lagrangian.invariant(inputs)))
 
 
 class SingleParticleInvariantMonitor(Monitor):
