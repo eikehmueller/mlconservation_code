@@ -8,5 +8,7 @@
     "python.linting.pylintEnabled": true,
     "python.linting.pylintArgs": [
         "--rcfile=./src/.pylintrc"
-    ]
+    ],
+    "python.linting.lintOnSave": true,
+    "files.autoSave": "afterDelay"
 }
