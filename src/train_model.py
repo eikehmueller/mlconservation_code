@@ -158,7 +158,11 @@ else:
         tinterval=0.1,
     )
 
-train_batches = data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
+train_batches = (
+    data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE)
+    .batch(BATCH_SIZE)
+    .prefetch(tf.data.AUTOTUNE)
+)
 
 # ---- Construct NN model ----
 model = LagrangianModel(nn_lagrangian)
