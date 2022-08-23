@@ -53,7 +53,6 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
         grads = tf.unstack(tf.gradients(self.lagrangian(q_qdot), qdot)[0], axis=-1)
         return tf.stack([tf.gradients(grad, qdot)[0] for grad in grads], axis=-1)
 
-    # @tf.function
     def J_qqdot(self, y):
         """d x d matrix J_{q,dot{q}}"""
         q, qdot = tf.split(y, num_or_size_splits=2, axis=-1)
@@ -116,25 +115,21 @@ class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer
         self.lagrangian = lagrangian
         self.A_vec_func = A_vec_func
 
-    @tf.function
     def _hessian(self, y, mu, nu):
         """Helper function for computing Hessian d^2 L / (dy^mu dy^nu)"""
         d_y_mu = tf.unstack(tf.gradients(self.lagrangian(y), y)[0], axis=1)[mu]
         return tf.unstack(tf.gradients(d_y_mu, y)[0], axis=1)[nu]
 
-    @tf.function
     def dL_dx(self, y):
         """Gradient of Lagrangian dL/dx"""
         dL = tf.unstack(tf.gradients(self.lagrangian(y), y)[0], axis=1)
         return tf.stack(dL[:4], axis=1)
 
-    @tf.function
     def dL_dA(self, y):
         """Partial derivative of Lagrangian with respect to A, dL/dA"""
         dL = tf.unstack(tf.gradients(self.lagrangian(y), y)[0], axis=1)
         return tf.stack(dL[8:], axis=1)
 
-    @tf.function
     def J_xu(self, y):
         """4 x 4 matrix J_{x,u}"""
         rows = []
@@ -145,7 +140,6 @@ class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer
             rows.append(tf.stack(row, axis=1))
         return tf.stack(rows, axis=1)
 
-    @tf.function
     def J_uu(self, y):
         """4 x 4 matrix J_{u,u}"""
         rows = []
@@ -156,7 +150,6 @@ class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer
             rows.append(tf.stack(row, axis=1))
         return tf.stack(rows, axis=1)
 
-    @tf.function
     def J_Au(self, y):
         """4 x 4 matrix J_{A,u}"""
         rows = []
@@ -167,7 +160,6 @@ class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer
             rows.append(tf.stack(row, axis=1))
         return tf.stack(rows, axis=1)
 
-    @tf.function
     def dA_dx(self, x):
         """Compute the derivative of A^mu with respect to x^nu"""
         A_vec = tf.unstack(self.A_vec_func(x), axis=1)
@@ -176,7 +168,6 @@ class RelativisticChargedParticleLagrangianDynamicalSystem(tf.keras.layers.Layer
             dA_dx_list.append(tf.gradients(A_vec[i], x, stop_gradients=[x])[0])
         return tf.stack(dA_dx_list, axis=2)
 
-    @tf.function
     def J_uu_inv(self, y):
         """4 x 4 matrix (J_{uu})^{-1}"""
         return tf.linalg.pinv(self.J_uu(y))
