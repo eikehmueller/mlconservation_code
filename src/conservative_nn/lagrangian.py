@@ -51,7 +51,6 @@ class HarmonicOscillatorLagrangian(Lagrangian):
         eigenvalues, _ = np.linalg.eig(mat)
         assert all(np.real(eigenvalues) > 1.0e-6)
 
-    @tf.function
     def __call__(self, inputs):
         """Evaluate Lagrangian
 
@@ -79,7 +78,6 @@ class XYModelLagrangian(Lagrangian):
         super().__init__(dim)
         self.a_lat = 1.0 / self.dim
 
-    @tf.function
     def __call__(self, inputs):
         """Evaluate Lagrangian
 
@@ -125,7 +123,6 @@ class DoublePendulumLagrangian(Lagrangian):
         self.L1 = L1
         self.g_grav = g_grav
 
-    @tf.function
     def __call__(self, inputs):
         """Evaluate Lagrangian
 
