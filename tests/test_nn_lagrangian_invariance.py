@@ -205,7 +205,7 @@ def test_two_particle_lagrangian_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 2.0e-5
+    tolerance = 2.5e-5
     x1 = rng.normal(size=(n_samples, dim_space))
     x2 = rng.normal(size=(n_samples, dim_space))
     u1 = rng.normal(size=(n_samples, dim_space))
