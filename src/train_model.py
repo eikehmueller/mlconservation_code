@@ -13,6 +13,7 @@ python train_model.py --parameterfile=PARAMETERFILE
 If no parameter filename is given, it defaults to training_parameters.toml
 """
 
+import os
 import argparse
 import toml
 import tensorflow as tf
@@ -38,6 +39,9 @@ from conservative_nn.initializer import (
     SchwarzschildConstantInitializer,
 )
 from conservative_nn.kepler import KeplerSolution
+
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # Parse command line arguments
 parser = argparse.ArgumentParser()
