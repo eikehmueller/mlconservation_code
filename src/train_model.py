@@ -71,7 +71,7 @@ print("----------------- end ------------------------")
 EPOCHS = parameters["training"]["epochs"]
 STEPS_PER_EPOCH = parameters["training"]["steps_per_epoch"]
 BATCH_SIZE = parameters["training"]["batch_size"]
-SHUFFLE_BUFFER_SIZE = 32 * BATCH_SIZE
+SHUFFLE_BUFFER_SIZE = 128 * BATCH_SIZE
 
 rotation_invariant = bool(parameters["symmetry"]["rotation_invariant"])
 translation_invariant = bool(parameters["symmetry"]["translation_invariant"])
@@ -163,7 +163,7 @@ else:
     )
 
 train_batches = (
-    data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE)
+    data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE, seed=21845)
     .prefetch(tf.data.AUTOTUNE)
     .batch(BATCH_SIZE, drop_remainder=True)
 )
