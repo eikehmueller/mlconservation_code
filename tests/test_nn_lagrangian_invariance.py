@@ -47,7 +47,7 @@ def test_xymodel_nn_lagrangian_rotation_invariance(rng, dense_layers, dim):
     # rotation angle
     phi = 1.1
     # tolerance for tests
-    tolerance = 1.0e-5
+    tolerance = 2.0e-5
     q = rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
     qdot = rng.normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
@@ -78,7 +78,7 @@ def test_xymodel_nn_lagrangian_shift_invariance(rng, dense_layers, dim, offset):
     # rotation angle
     phi = 1.1
     # tolerance for tests
-    tolerance = 1.0e-5
+    tolerance = 2.0e-5
     q = rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
     qdot = rng.normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
@@ -124,7 +124,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(rng, dense_layers):
     delta_1 = 0.3
     delta_2 = 1.7
     # tolerance for tests
-    tolerance = 1.0e-5
+    tolerance = 2.0e-5
     q0 = np.asarray(
         alpha_1 * np.cos(0.5 * np.pi * np.arange(dim) + delta_1), dtype=np.float32
     )
@@ -156,7 +156,7 @@ def test_single_particle_lagrangian_rotation_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 1.0e-5
+    tolerance = 2.0e-5
     q = rng.normal(size=(n_samples, dim))
     qdot = rng.normal(size=(n_samples, dim))
     if reflection_invariant:
@@ -205,7 +205,7 @@ def test_two_particle_lagrangian_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 1.0e-5
+    tolerance = 2.0e-5
     x1 = rng.normal(size=(n_samples, dim_space))
     x2 = rng.normal(size=(n_samples, dim_space))
     u1 = rng.normal(size=(n_samples, dim_space))
@@ -233,7 +233,7 @@ def test_schwarzschild_lagrangian_rotation_invariance(rng, dense_layers):
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 1.0e-5
+    tolerance = 2.0e-5
     q = rng.normal(size=(n_samples, 4))
     qdot = rng.normal(size=(n_samples, 4))
     R_rot = np.identity(4)
