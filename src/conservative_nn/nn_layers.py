@@ -57,14 +57,8 @@ class RotationallyInvariantLayer(tf.keras.layers.Layer):
         :arg inputs: a tensor of shape
         """
         # ==== 1. dot products a_j.a_k ====
-        z = tf.unstack(inputs, axis=-1)
-        # Ensure that input is of the correct size
-        assert len(z) == self.dim_space * self.n_tensors
         # a_vec[j] is a tensor of shape (BATCHSIZE,d) for j = 0,1,...n-1
-        a_vec = [
-            tf.stack(z[j * self.dim_space : (j + 1) * self.dim_space], axis=-1)
-            for j in range(self.n_tensors)
-        ]
+        a_vec = tf.split(inputs, num_or_size_splits=self.n_tensors, axis=-1)
         invariants = [
             tf.reduce_sum(tf.multiply(*pair), axis=-1)
             for pair in list(combinations_with_replacement(a_vec, 2))
@@ -73,6 +67,7 @@ class RotationallyInvariantLayer(tf.keras.layers.Layer):
             # === 2. Contractions with Levi-Civita tensor ===
             # b_vec_list[j][k] is the k-th entry of the j-the tensor where j=0,1,...n-1
             # and k=0,1,...,d-1
+            z = tf.unstack(inputs, axis=-1)
             b_vec_list = [
                 z[j * self.dim_space : (j + 1) * self.dim_space]
                 for j in range(self.n_tensors)

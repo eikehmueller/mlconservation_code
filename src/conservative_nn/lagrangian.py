@@ -51,17 +51,15 @@ class HarmonicOscillatorLagrangian(Lagrangian):
         eigenvalues, _ = np.linalg.eig(mat)
         assert all(np.real(eigenvalues) > 1.0e-6)
 
-    @tf.function
     def __call__(self, inputs):
         """Evaluate Lagrangian
 
         :arg inputs: Values of q and qdot in a single tensor of shape (None,2*d)
         """
-        q_qdot = tf.unstack(inputs, axis=1)
-        q = tf.stack(q_qdot[: self.dim], axis=1)
-        qdot = tf.stack(q_qdot[self.dim :], axis=1)
-        T_kin = 0.5 * tf.einsum("aj,jk,ak->a", qdot, self.M_mat, qdot)
-        V_pot = 0.5 * tf.einsum("aj,jk,ak->a", q, self.A_mat, q)
+        q = inputs[:, 0 : self.dim]
+        qdot = inputs[:, self.dim :]
+        T_kin = 0.5 * tf.einsum("jk,aj,ak->a", self.M_mat, qdot, qdot)
+        V_pot = 0.5 * tf.einsum("jk,aj,ak->a", self.A_mat, q, q)
         return T_kin - V_pot
 
 
@@ -80,20 +78,19 @@ class XYModelLagrangian(Lagrangian):
         super().__init__(dim)
         self.a_lat = 1.0 / self.dim
 
-    @tf.function
     def __call__(self, inputs):
         """Evaluate Lagrangian
 
         :arg inputs: Values of q and qdot in a single tensor of shape (None,2*d)
         """
-        q_qdot = tf.unstack(inputs, axis=1)
-        q = tf.stack(q_qdot[: self.dim], axis=1)
-        qdot = tf.stack(q_qdot[self.dim :], axis=1)
-        T_kin = 0.5 * self.a_lat * tf.reduce_sum(tf.multiply(qdot, qdot), axis=1)
+        q_qdot = tf.unstack(inputs, axis=-1)
+        q = tf.stack(q_qdot[: self.dim], axis=-1)
+        qdot = tf.stack(q_qdot[self.dim :], axis=-1)
+        T_kin = 0.5 * self.a_lat * tf.reduce_sum(tf.multiply(qdot, qdot), axis=-1)
         V_pot = (
             -1.0
             / self.a_lat
-            * tf.reduce_sum(tf.cos(q - tf.roll(q, shift=-1, axis=1)) - 1.0, axis=1)
+            * tf.reduce_sum(tf.cos(q - tf.roll(q, shift=-1, axis=-1)) - 1.0, axis=-1)
         )
 
         return T_kin - V_pot
@@ -126,13 +123,12 @@ class DoublePendulumLagrangian(Lagrangian):
         self.L1 = L1
         self.g_grav = g_grav
 
-    @tf.function
     def __call__(self, inputs):
         """Evaluate Lagrangian
 
         :arg inputs: Values of q and qdot in a single tensor of shape (None,4)
         """
-        theta0, theta1, dtheta0, dtheta1 = tf.unstack(inputs, axis=1)
+        theta0, theta1, dtheta0, dtheta1 = tf.unstack(inputs, axis=-1)
         T_kin = (
             1 / 2 * (self.m0 + self.m1) * self.L0**2 * dtheta0**2
             + 1 / 2 * self.m1 * self.L1**2 * dtheta1**2
@@ -161,15 +157,15 @@ class RelativisticChargedParticleLagrangian(Lagrangian):
 
     def __call__(self, inputs):
         # Extract velocity and vector potential
-        x_u_A = tf.unstack(inputs, axis=1)
-        u = tf.stack(x_u_A[4:8], axis=1)
-        A_vec = tf.stack(x_u_A[8:12], axis=1)
+        x_u_A = tf.unstack(inputs, axis=-1)
+        u = tf.stack(x_u_A[4:8], axis=-1)
+        A_vec = tf.stack(x_u_A[8:12], axis=-1)
         # Constract covariant velocity vector
         g_metric = np.diag(np.asarray([+1, -1, -1, -1], dtype=np.float32))
         u_cov = tf.tensordot(u, g_metric, axes=[[1], [0]])
         return (
-            0.5 * self.mass * tf.reduce_sum(tf.multiply(u, u_cov), axis=1)
-        ) + self.charge * tf.reduce_sum(tf.multiply(A_vec, u_cov), axis=1)
+            0.5 * self.mass * tf.reduce_sum(tf.multiply(u, u_cov), axis=-1)
+        ) + self.charge * tf.reduce_sum(tf.multiply(A_vec, u_cov), axis=-1)
 
 
 class DoubleWellPotentialLagrangian(Lagrangian):
@@ -200,11 +196,11 @@ class DoubleWellPotentialLagrangian(Lagrangian):
 
     def __call__(self, inputs):
         # Extract position and velocity
-        x_u = tf.unstack(inputs, axis=1)
-        x = tf.stack(x_u[0 : self.dim], axis=1)
-        u = tf.stack(x_u[self.dim : 2 * self.dim], axis=1)
-        x_sq = tf.reduce_sum(tf.multiply(x, x), axis=1)
-        u_sq = tf.reduce_sum(tf.multiply(u, u), axis=1)
+        x_u = tf.unstack(inputs, axis=-1)
+        x = tf.stack(x_u[0 : self.dim], axis=-1)
+        u = tf.stack(x_u[self.dim : 2 * self.dim], axis=-1)
+        x_sq = tf.reduce_sum(tf.multiply(x, x), axis=-1)
+        u_sq = tf.reduce_sum(tf.multiply(u, u), axis=-1)
         return (
             0.5 * self.mass * u_sq
             + 0.5 * self.mu * x_sq
@@ -242,14 +238,14 @@ class TwoParticleLagrangian(Lagrangian):
 
     def __call__(self, inputs):
         # Extract position and velocity
-        x_u = tf.unstack(inputs, axis=1)
-        x1 = tf.stack(x_u[0 : self.dim // 2], axis=1)
-        x2 = tf.stack(x_u[self.dim // 2 : self.dim], axis=1)
-        u1 = tf.stack(x_u[self.dim : 3 * self.dim // 2], axis=1)
-        u2 = tf.stack(x_u[3 * self.dim // 2 : 2 * self.dim], axis=1)
-        u1_sq = tf.reduce_sum(tf.multiply(u1, u1), axis=1)
-        u2_sq = tf.reduce_sum(tf.multiply(u2, u2), axis=1)
-        dx_sq = tf.reduce_sum(tf.multiply(x1 - x2, x1 - x2), axis=1)
+        x_u = tf.unstack(inputs, axis=-1)
+        x1 = tf.stack(x_u[0 : self.dim // 2], axis=-1)
+        x2 = tf.stack(x_u[self.dim // 2 : self.dim], axis=-1)
+        u1 = tf.stack(x_u[self.dim : 3 * self.dim // 2], axis=-1)
+        u2 = tf.stack(x_u[3 * self.dim // 2 : 2 * self.dim], axis=-1)
+        u1_sq = tf.reduce_sum(tf.multiply(u1, u1), axis=-1)
+        u2_sq = tf.reduce_sum(tf.multiply(u2, u2), axis=-1)
+        dx_sq = tf.reduce_sum(tf.multiply(x1 - x2, x1 - x2), axis=-1)
         return (
             0.5 * self.mass1 * u1_sq
             + 0.5 * self.mass2 * u2_sq
@@ -282,11 +278,11 @@ class KeplerLagrangian(Lagrangian):
 
     def __call__(self, inputs):
         # Extract position and velocity
-        x_u = tf.unstack(inputs, axis=1)
-        x = tf.stack(x_u[0:3], axis=1)
-        u = tf.stack(x_u[3:6], axis=1)
-        x_sq = tf.reduce_sum(tf.multiply(x, x), axis=1)
-        u_sq = tf.reduce_sum(tf.multiply(u, u), axis=1)
+        x_u = tf.unstack(inputs, axis=-1)
+        x = tf.stack(x_u[0:3], axis=-1)
+        u = tf.stack(x_u[3:6], axis=-1)
+        x_sq = tf.reduce_sum(tf.multiply(x, x), axis=-1)
+        u_sq = tf.reduce_sum(tf.multiply(u, u), axis=-1)
         return 0.5 * self.mass * u_sq + self.alpha / tf.sqrt(x_sq)
 
 
