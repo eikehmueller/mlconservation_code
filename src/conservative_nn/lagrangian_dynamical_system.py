@@ -38,36 +38,29 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
 
     def __init__(self, lagrangian):
         super().__init__()
-        self.dim = lagrangian.dim
-        self.lagrangian = tf.function(lagrangian)
+        self.dim = tf.constant(lagrangian.dim, dtype=tf.int32)
+        self.lagrangian = lagrangian
 
-    @tf.function
-    def _hessian(self, y):
-        """Return Hessian matrix of Lagrangian for a given input.
-
-        The returned matrix is H[a,b,j,k] where a,b are batch indices
-        """
-        return tf.transpose(tf.hessians(self.lagrangian(y), y)[0], perm=[0, 2, 1, 3])
-
-    @tf.function
     def div_L(self, y):
         """Gradient of Lagrangian dL/dq"""
         dL = tf.gradients(self.lagrangian(y), y)[0]
         return dL[..., : self.dim]
 
-    @tf.function
     def J_qdotqdot(self, y):
         """d x d matrix J_{dot{q},dot{q}}"""
-        H = self._hessian(y)
-        return H[..., self.dim : 2 * self.dim, self.dim : 2 * self.dim]
+        q, qdot = tf.split(y, num_or_size_splits=2, axis=-1)
+        q_qdot = tf.concat([q, qdot], axis=-1)
+        grads = tf.unstack(tf.gradients(self.lagrangian(q_qdot), qdot)[0], axis=-1)
+        return tf.stack([tf.gradients(grad, qdot)[0] for grad in grads], axis=-1)
 
-    @tf.function
+    # @tf.function
     def J_qqdot(self, y):
         """d x d matrix J_{q,dot{q}}"""
-        H = self._hessian(y)
-        return H[..., 0 : self.dim, self.dim : 2 * self.dim]
+        q, qdot = tf.split(y, num_or_size_splits=2, axis=-1)
+        q_qdot = tf.concat([q, qdot], axis=-1)
+        grads = tf.unstack(tf.gradients(self.lagrangian(q_qdot), qdot)[0], axis=-1)
+        return tf.stack([tf.gradients(grad, q)[0] for grad in grads], axis=-1)
 
-    @tf.function
     def J_qdotqdot_inv(self, y):
         """d x d matrix (J_{dot{q},dot{q}})^{-1}"""
         return tf.linalg.pinv(self.J_qdotqdot(y))
@@ -79,8 +72,8 @@ class LagrangianDynamicalSystem(tf.keras.layers.Layer):
         :arg y: Phase space vector y = (q,qdot)
         """
         return tf.einsum(
-            "ai,aaij->aj",
-            self.div_L(y) - tf.einsum("ai,aaij->aj", y[:, self.dim :], self.J_qqdot(y)),
+            "ai,aij->aj",
+            self.div_L(y) - tf.einsum("ai,aij->aj", y[:, self.dim :], self.J_qqdot(y)),
             self.J_qdotqdot_inv(y),
         )
 
