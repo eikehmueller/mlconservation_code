@@ -16,6 +16,7 @@ If no parameter filename is given, it defaults to training_parameters.toml
 import os
 import argparse
 import toml
+import numpy as np
 import tensorflow as tf
 
 from conservative_nn.data_generator import (
@@ -78,9 +79,22 @@ translation_invariant = bool(parameters["symmetry"]["translation_invariant"])
 reflection_invariant = bool(parameters["symmetry"]["reflection_invariant"])
 
 # The intermediate dense layers to be used in the NNs
+n_units = 128
 dense_layers = [
-    tf.keras.layers.Dense(128, activation="softplus"),
-    tf.keras.layers.Dense(128, activation="softplus"),
+    tf.keras.layers.Dense(
+        n_units,
+        activation="softplus",
+        kernel_initializer=tf.keras.initializers.RandomNormal(
+            stddev=2.0 / np.sqrt(n_units), seed=214127
+        ),
+    ),
+    tf.keras.layers.Dense(
+        n_units,
+        activation="softplus",
+        kernel_initializer=tf.keras.initializers.RandomNormal(
+            stddev=1.0 / np.sqrt(n_units), seed=775411
+        ),
+    ),
 ]
 
 

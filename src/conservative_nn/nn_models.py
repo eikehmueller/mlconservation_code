@@ -20,11 +20,28 @@ from conservative_nn.lagrangian_dynamical_system import LagrangianDynamicalSyste
 
 
 class NNLagrangian(tf.keras.layers.Layer):
-    """Base class for neural network based Lagrangians"""
+    """Base class for neural network based Lagrangians
 
-    def __init__(self, **kwargs):
+    :arg dense_layers: (hidden) dense layers
+    """
+
+    def __init__(self, dense_layers=None, **kwargs):
         super().__init__(**kwargs)
-        self.dense_layers = []
+        if dense_layers is None:
+            self.dense_layers = []
+            n_out = 1
+        else:
+            self.dense_layers = dense_layers
+            n_out = self.dense_layers[-1].units
+            self.dense_layers.append(
+                tf.keras.layers.Dense(
+                    1,
+                    use_bias=False,
+                    kernel_initializer=tf.keras.initializers.RandomNormal(
+                        stddev=np.sqrt(n_out), seed=15173
+                    ),
+                )
+            )
 
     def save(self, filepath, overwrite=True):
         """Save the model to the specified directory
@@ -113,12 +130,10 @@ class XYModelNNLagrangian(NNLagrangian):
     def __init__(
         self, dim, dense_layers, rotation_invariant=True, shift_invariant=True, **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(dense_layers, **kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.shift_invariant = shift_invariant
-        self.dense_layers = [] if dense_layers is None else dense_layers
-        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
@@ -193,13 +208,10 @@ class SingleParticleNNLagrangian(NNLagrangian):
         reflection_invariant=True,
         **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(dense_layers, **kwargs)
         self.dim = dim
         self.rotation_invariant = rotation_invariant
         self.reflection_invariant = reflection_invariant
-        # Add final layer
-        self.dense_layers = [] if dense_layers is None else dense_layers
-        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
@@ -259,12 +271,9 @@ class SchwarzschildNNLagrangian(NNLagrangian):
     """
 
     def __init__(self, dense_layers, rotation_invariant=True, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(dense_layers, **kwargs)
         self.dim = 4
         self.rotation_invariant = rotation_invariant
-        # Add final layer
-        self.dense_layers = [] if dense_layers is None else dense_layers
-        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
@@ -342,14 +351,12 @@ class TwoParticleNNLagrangian(NNLagrangian):
         reflection_invariant=True,
         **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(dense_layers, **kwargs)
         self.dim_space = dim_space
         self.dim = 2 * dim_space
         self.rotation_invariant = rotation_invariant
         self.translation_invariant = translation_invariant
         self.reflection_invariant = reflection_invariant
-        self.dense_layers = [] if dense_layers is None else dense_layers
-        self.dense_layers.append(tf.keras.layers.Dense(1, use_bias=False))
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
