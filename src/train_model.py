@@ -160,8 +160,8 @@ else:
 
 train_batches = (
     data_generator.dataset.shuffle(SHUFFLE_BUFFER_SIZE)
-    .batch(BATCH_SIZE)
     .prefetch(tf.data.AUTOTUNE)
+    .batch(BATCH_SIZE, drop_remainder=True)
 )
 
 # ---- Construct NN model ----
