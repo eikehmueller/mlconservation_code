@@ -20,10 +20,23 @@ from common import rng
 
 @pytest.fixture
 def dense_layers():
-    """Return dense layers for neural network lagrangians"""
+    """Return list with dense layers that can be used as hidden layers of NN Lagrangians"""
+    n_units = 32  # number of units in dense layers
     return [
-        tf.keras.layers.Dense(32, activation="softplus"),
-        tf.keras.layers.Dense(32, activation="softplus"),
+        tf.keras.layers.Dense(
+            n_units,
+            activation="softplus",
+            kernel_initializer=tf.keras.initializers.RandomNormal(
+                stddev=2.0 / np.sqrt(n_units), seed=214127
+            ),
+        ),
+        tf.keras.layers.Dense(
+            n_units,
+            activation="softplus",
+            kernel_initializer=tf.keras.initializers.RandomNormal(
+                stddev=1.0 / np.sqrt(n_units), seed=325231
+            ),
+        ),
     ]
 
 
@@ -156,7 +169,7 @@ def test_single_particle_lagrangian_rotation_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 2.0e-5
+    tolerance = 2.5e-5
     q = rng.normal(size=(n_samples, dim))
     qdot = rng.normal(size=(n_samples, dim))
     if reflection_invariant:
@@ -205,7 +218,7 @@ def test_two_particle_lagrangian_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 2.5e-5
+    tolerance = 5.0e-5
     x1 = rng.normal(size=(n_samples, dim_space))
     x2 = rng.normal(size=(n_samples, dim_space))
     u1 = rng.normal(size=(n_samples, dim_space))
