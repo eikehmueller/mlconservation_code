@@ -29,7 +29,7 @@ from conservative_nn.dynamical_system import (
     TwoParticleSystem,
     SchwarzschildSystem,
 )
-from conservative_nn.nn_models import (
+from conservative_nn.nn_lagrangian_model import (
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
     SchwarzschildNNLagrangian,

@@ -8,7 +8,7 @@ import tensorflow as tf
 from scipy.stats import ortho_group, special_ortho_group
 
 from conservative_nn.time_integrator import RK4Integrator
-from conservative_nn.nn_models import (
+from conservative_nn.nn_lagrangian_model import (
     XYModelNNLagrangian,
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
