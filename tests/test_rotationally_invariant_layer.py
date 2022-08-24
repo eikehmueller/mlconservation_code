@@ -6,24 +6,24 @@ from itertools import permutations, combinations, combinations_with_replacement
 from sympy.combinatorics.permutations import Permutation
 from conservative_nn.nn_layers import RotationallyInvariantLayer
 
-from common import rng
+from common import rng, tolerance
 
 
 @pytest.mark.parametrize("dim_space", [2, 3, 4, 6, 8])
 @pytest.mark.parametrize("n_tensors", [1, 2, 3, 4, 5, 6])
 @pytest.mark.parametrize("reflection_invariant", [True, False])
-def test_rotationally_invariant_layer(dim_space, rng, n_tensors, reflection_invariant):
+def test_rotationally_invariant_layer(
+    dim_space, rng, tolerance, n_tensors, reflection_invariant
+):
     """Compare the output from a rotationally invariant layer to a manual calculation
 
     :arg dim_space: dimension d of space
     :arg n_tensors: number n of tensors
     :arg reflection_invariant: assume invariance under reflections?
     """
-    # Tolerance for comparison
-    tolerance = 1.0e-5
     # Create tensor of shape (BATCHSIZE,dim_space * n_tensors)
     BATCHSIZE = 1
-    inputs = rng.normal(size=dim_space * n_tensors)
+    inputs = rng.standard_normal(size=dim_space * n_tensors)
 
     # Manually reduce
     # Split inputs into n vectors of size d

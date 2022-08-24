@@ -15,15 +15,28 @@ from conservative_nn.nn_lagrangian import (
     SchwarzschildNNLagrangian,
 )
 from conservative_nn.nn_lagrangian_model import NNLagrangianModel
-from common import rng
+from common import rng, tolerance
 
 
 @pytest.fixture
 def dense_layers():
-    """Return dense layers for neural network lagrangians"""
+    """Return list with dense layers that can be used as hidden layers of NN Lagrangians"""
+    n_units = 32  # number of units in dense layers
     return [
-        tf.keras.layers.Dense(32, activation="softplus"),
-        tf.keras.layers.Dense(32, activation="softplus"),
+        tf.keras.layers.Dense(
+            n_units,
+            activation="softplus",
+            kernel_initializer=tf.keras.initializers.RandomNormal(
+                stddev=2.0 / np.sqrt(n_units), seed=214127
+            ),
+        ),
+        tf.keras.layers.Dense(
+            n_units,
+            activation="softplus",
+            kernel_initializer=tf.keras.initializers.RandomNormal(
+                stddev=1.0 / np.sqrt(n_units), seed=325231
+            ),
+        ),
     ]
 
 
@@ -47,9 +60,11 @@ def test_xymodel_nn_lagrangian_rotation_invariance(rng, dense_layers, dim):
     # rotation angle
     phi = 1.1
     # tolerance for tests
-    tolerance = 2.0e-5
-    q = rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
-    qdot = rng.normal(size=(n_samples, dim))
+    tolerance = 1.0e-12
+    q = np.asarray(
+        rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim)), dtype=np.float64
+    )
+    qdot = rng.standard_normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
     X_rotated = np.concatenate([q + phi, qdot], axis=1)
     dL = nn_lagrangian(X_rotated) - nn_lagrangian(X)
@@ -58,7 +73,9 @@ def test_xymodel_nn_lagrangian_rotation_invariance(rng, dense_layers, dim):
 
 @pytest.mark.parametrize("dim", [4, 6, 8])
 @pytest.mark.parametrize("offset", [1, 2, 3])
-def test_xymodel_nn_lagrangian_shift_invariance(rng, dense_layers, dim, offset):
+def test_xymodel_nn_lagrangian_shift_invariance(
+    rng, tolerance, dense_layers, dim, offset
+):
     """Check that the neural network Lagrangian has the same value
     if all angles are shifted by a fixed offset.
 
@@ -77,10 +94,10 @@ def test_xymodel_nn_lagrangian_shift_invariance(rng, dense_layers, dim, offset):
     n_samples = 4
     # rotation angle
     phi = 1.1
-    # tolerance for tests
-    tolerance = 2.0e-5
-    q = rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
-    qdot = rng.normal(size=(n_samples, dim))
+    q = np.asarray(
+        rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim)), dtype=np.float64
+    )
+    qdot = rng.standard_normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
     X_shifted = np.concatenate(
         [np.roll(q, offset, axis=1), np.roll(qdot, offset, axis=1)], axis=1
@@ -90,7 +107,7 @@ def test_xymodel_nn_lagrangian_shift_invariance(rng, dense_layers, dim, offset):
 
 
 @pytest.mark.skip(reason="too expensive")
-def test_xymodel_nn_eigenstate_shift_invariance(rng, dense_layers):
+def test_xymodel_nn_eigenstate_shift_invariance(rng, tolerance, dense_layers):
     """Check that that if the dynamical system is initialised with an eigenstate
     of the shift operator, the dynamics will will preserve shift invariance.
 
@@ -123,8 +140,6 @@ def test_xymodel_nn_eigenstate_shift_invariance(rng, dense_layers):
     alpha_2 = 2.4
     delta_1 = 0.3
     delta_2 = 1.7
-    # tolerance for tests
-    tolerance = 2.0e-5
     q0 = np.asarray(
         alpha_1 * np.cos(0.5 * np.pi * np.arange(dim) + delta_1), dtype=np.float32
     )
@@ -142,7 +157,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(rng, dense_layers):
 @pytest.mark.parametrize("dim", [2, 4, 6, 8])
 @pytest.mark.parametrize("reflection_invariant", [False, True])
 def test_single_particle_lagrangian_rotation_invariance(
-    rng, dense_layers, dim, reflection_invariant
+    rng, tolerance, dense_layers, dim, reflection_invariant
 ):
     """Check that the neural network Lagrangian has the same value
     if the input vectors are rotated.
@@ -155,10 +170,8 @@ def test_single_particle_lagrangian_rotation_invariance(
     )
     # number of samples to check
     n_samples = 4
-    # tolerance for tests
-    tolerance = 2.0e-5
-    q = rng.normal(size=(n_samples, dim))
-    qdot = rng.normal(size=(n_samples, dim))
+    q = rng.standard_normal(size=(n_samples, dim))
+    qdot = rng.standard_normal(size=(n_samples, dim))
     if reflection_invariant:
         R_rot = ortho_group.rvs(dim, random_state=rng)
     else:
@@ -176,6 +189,7 @@ def test_single_particle_lagrangian_rotation_invariance(
 @pytest.mark.parametrize("reflection_invariant", [False, True])
 def test_two_particle_lagrangian_invariance(
     rng,
+    tolerance,
     dense_layers,
     dim_space,
     rotation_invariant,
@@ -204,17 +218,15 @@ def test_two_particle_lagrangian_invariance(
     )
     # number of samples to check
     n_samples = 4
-    # tolerance for tests
-    tolerance = 2.5e-5
-    x1 = rng.normal(size=(n_samples, dim_space))
-    x2 = rng.normal(size=(n_samples, dim_space))
-    u1 = rng.normal(size=(n_samples, dim_space))
-    u2 = rng.normal(size=(n_samples, dim_space))
+    x1 = rng.standard_normal(size=(n_samples, dim_space))
+    x2 = rng.standard_normal(size=(n_samples, dim_space))
+    u1 = rng.standard_normal(size=(n_samples, dim_space))
+    u2 = rng.standard_normal(size=(n_samples, dim_space))
     if reflection_invariant:
         R_rot = ortho_group.rvs(dim_space, random_state=rng)
     else:
         R_rot = special_ortho_group.rvs(dim_space, random_state=rng)
-    offset = rng.normal(size=dim_space)
+    offset = rng.standard_normal(size=dim_space)
     X = np.concatenate([x1, x2, u1, u2], axis=1)
     rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v) if rotation_invariant else v
     translate = lambda v: v + offset if translation_invariant else v
@@ -225,17 +237,15 @@ def test_two_particle_lagrangian_invariance(
     assert np.linalg.norm(dL) < tolerance
 
 
-def test_schwarzschild_lagrangian_rotation_invariance(rng, dense_layers):
+def test_schwarzschild_lagrangian_rotation_invariance(rng, tolerance, dense_layers):
     """Check that the neural network Lagrangian has the same value
     if the three-vector parts of the input vectors are rotated.
     """
     nn_lagrangian = SchwarzschildNNLagrangian(dense_layers, rotation_invariant=True)
     # number of samples to check
     n_samples = 4
-    # tolerance for tests
-    tolerance = 2.0e-5
-    q = rng.normal(size=(n_samples, 4))
-    qdot = rng.normal(size=(n_samples, 4))
+    q = rng.standard_normal(size=(n_samples, 4))
+    qdot = rng.standard_normal(size=(n_samples, 4))
     R_rot = np.identity(4)
     R_rot[1:, 1:] = ortho_group.rvs(3, random_state=rng)
     X = np.concatenate([q, qdot], axis=1)

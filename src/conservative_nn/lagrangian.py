@@ -39,8 +39,8 @@ class HarmonicOscillatorLagrangian(Lagrangian):
         super().__init__(dim)
         self._check_positive_definite(M_mat)
         self._check_positive_definite(A_mat)
-        self.M_mat = tf.constant(M_mat, dtype=tf.float32)
-        self.A_mat = tf.constant(A_mat, dtype=tf.float32)
+        self.M_mat = M_mat
+        self.A_mat = A_mat
 
     def _check_positive_definite(self, mat):
         """Assert that a matrix is symmetric positive definite.
@@ -161,7 +161,7 @@ class RelativisticChargedParticleLagrangian(Lagrangian):
         u = tf.stack(x_u_A[4:8], axis=-1)
         A_vec = tf.stack(x_u_A[8:12], axis=-1)
         # Constract covariant velocity vector
-        g_metric = np.diag(np.asarray([+1, -1, -1, -1], dtype=np.float32))
+        g_metric = tf.constant(np.diag(np.asarray([+1, -1, -1, -1])), dtype=u.dtype)
         u_cov = tf.tensordot(u, g_metric, axes=[[1], [0]])
         return (
             0.5 * self.mass * tf.reduce_sum(tf.multiply(u, u_cov), axis=-1)
