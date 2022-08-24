@@ -15,6 +15,7 @@ If no parameter filename is given, it defaults to training_parameters.toml
 
 import os
 import argparse
+from shutil import copyfile
 import toml
 import numpy as np
 import tensorflow as tf
@@ -67,6 +68,7 @@ print(cmdline_args.parameterfile)
 print("----------------- begin ----------------------")
 print(toml.dumps(parameters))
 print("----------------- end ------------------------")
+
 
 # Set training parameters passed from file
 EPOCHS = parameters["training"]["epochs"]
@@ -217,4 +219,10 @@ result = model.fit(
 
 #
 if parameters["saved_model"]["filename"] != "":
+    # Save model
     nn_lagrangian.save(parameters["saved_model"]["filename"])
+    # Copy parameter file to directory with saved model
+    copyfile(
+        cmdline_args.parameterfile,
+        os.path.join(parameters["saved_model"]["filename"], "training_parameters.toml"),
+    )
