@@ -3,9 +3,6 @@
 Each Lagrangian is implemented as a subclass of tf.keras.layers.Layer.
 The exact structure of a Lagrangian, for example its inputs, depends on the dynamical
 system which it is trained for and the symmeries that we want to preserve.
-
-The LagrangianModel class wraps the Lagrangian dynamical system from
-lagrangian_dynamical_system.py as a subclass of tf.keras.models.Model.
 """
 
 import os
@@ -16,7 +13,6 @@ import numpy as np
 import tensorflow as tf
 from conservative_nn.auxilliary import ndarrayDecoder, ndarrayEncoder
 from conservative_nn.nn_layers import RotationallyInvariantLayer
-from conservative_nn.lagrangian_dynamical_system import LagrangianDynamicalSystem
 
 
 class NNLagrangian(tf.keras.layers.Layer):
@@ -439,36 +435,3 @@ class TwoParticleNNLagrangian(NNLagrangian):
                     - tf.multiply(dL_du2[k], x2[j])
                 )
         return linear_momentum + angular_momentum
-
-
-class LagrangianModel(tf.keras.models.Model):
-    """Neural network for representing the mapping from the current
-    state (q,qdot) to the acceleration, assuming that the
-    Lagrangian is represented by a neural network
-
-    Represents a function R^{2d} -> R which encodes a Lagrangian
-
-    :arg dim: dimension d of dynamical system
-    :arg rotation_invariant: is the
-    """
-
-    def __init__(self, nn_lagrangian, **kwargs):
-        super().__init__(**kwargs)
-        self.dynamical_system = LagrangianDynamicalSystem(nn_lagrangian)
-        self.dim = self.dynamical_system.dim
-
-    def call(self, inputs):
-        """Evaluate Dynamical system defined by the model Lagrangian
-        for a given set of inputs
-
-        :arg inputs: phase space vector q,qdot
-        """
-        if len(inputs.shape) == 1:
-            # If input is a one-dimensional tensor, extend to two dimensions to be able to use
-            # the tensorflow code which expects tensors of shape (batchsize,dim)
-            return (
-                self.dynamical_system(tf.constant(inputs, shape=(1, inputs.shape[0])))
-                .numpy()
-                .flatten()
-            )
-        return self.dynamical_system(inputs)

@@ -1,7 +1,7 @@
 """Auxilliary code for encoding/decoding numpy arrays for json IO
 
-This is used to save the model weights of the Lagrangian NN models in nn_models.py since
-JSON can not automatically serialise numpy arrays.
+This is used to save the model weights of the Lagrangian NN models in nn_lagrangian_model.py
+since JSON can not automatically serialise numpy arrays.
 """
 import json
 import numpy as np

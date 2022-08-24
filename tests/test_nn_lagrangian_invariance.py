@@ -8,13 +8,13 @@ import tensorflow as tf
 from scipy.stats import ortho_group, special_ortho_group
 
 from conservative_nn.time_integrator import RK4Integrator
-from conservative_nn.nn_models import (
+from conservative_nn.nn_lagrangian import (
     XYModelNNLagrangian,
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
     SchwarzschildNNLagrangian,
-    LagrangianModel,
 )
+from conservative_nn.nn_lagrangian_model import NNLagrangianModel
 from common import rng, tolerance
 
 
@@ -134,7 +134,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(rng, tolerance, dense_layers):
     nn_lagrangian = XYModelNNLagrangian(
         dim, dense_layers, rotation_invariant=True, shift_invariant=True
     )
-    model = LagrangianModel(nn_lagrangian)
+    model = NNLagrangianModel(nn_lagrangian)
     time_integrator = RK4Integrator(model, dt)
     alpha_1 = 1.3
     alpha_2 = 2.4
