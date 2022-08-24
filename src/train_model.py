@@ -29,12 +29,12 @@ from conservative_nn.dynamical_system import (
     TwoParticleSystem,
     SchwarzschildSystem,
 )
-from conservative_nn.nn_lagrangian_model import (
+from conservative_nn.nn_lagrangian import (
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
     SchwarzschildNNLagrangian,
-    LagrangianModel,
 )
+from conservative_nn.nn_lagrangian_model import NNLagrangianModel
 from conservative_nn.initializer import (
     SingleParticleConstantInitializer,
     TwoParticleConstantInitializer,
@@ -185,7 +185,7 @@ train_batches = (
 )
 
 # ---- Construct NN model ----
-model = LagrangianModel(nn_lagrangian)
+model = NNLagrangianModel(nn_lagrangian)
 
 if parameters["training"]["schedule"] == "Constant":
     learning_rate = parameters["training"]["learning_rate"]
