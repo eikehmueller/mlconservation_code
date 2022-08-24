@@ -133,7 +133,7 @@ class TwoParticleInvariantMonitor(Monitor):
         ell = self.dim_space
         for j in range(self.dim_space):
             for k in range(j + 1, self.dim_space):
-                self.invariants[ell] = self.mass1 * (
+                invariants[ell] = self.mass1 * (
                     u1[j] * x1[k] - u1[k] * x1[j]
                 ) + self.mass2 * (u2[j] * x2[k] - u2[k] * x2[j])
                 ell += 1
