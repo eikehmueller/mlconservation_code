@@ -20,10 +20,10 @@ def test_rotationally_invariant_layer(dim_space, rng, n_tensors, reflection_inva
     :arg reflection_invariant: assume invariance under reflections?
     """
     # Tolerance for comparison
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     # Create tensor of shape (BATCHSIZE,dim_space * n_tensors)
     BATCHSIZE = 1
-    inputs = rng.normal(size=dim_space * n_tensors)
+    inputs = rng.standard_normal(size=dim_space * n_tensors)
 
     # Manually reduce
     # Split inputs into n vectors of size d

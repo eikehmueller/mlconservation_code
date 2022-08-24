@@ -31,5 +31,5 @@ def test_kepler_acceleration_analytical():
     q_qdot = np.concatenate([q, qdot], axis=0)
     acc_analytical = kepler_solution.acceleration(phi)
     acc = dynamical_system.call(q_qdot)
-    tolerance = 1.0e-6
+    tolerance = 1.0e-12
     assert np.linalg.norm(acc - acc_analytical) < tolerance

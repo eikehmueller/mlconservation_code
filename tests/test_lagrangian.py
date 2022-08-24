@@ -48,14 +48,14 @@ def test_harmonic_oscillator_lagrangian(rng, dim):
     """
     M_mat, A_mat = harmonic_oscillator_matrices(dim)
     lagrangian = HarmonicOscillatorLagrangian(dim, M_mat, A_mat)
-    q = rng.normal(size=dim)
-    qdot = rng.normal(size=dim)
-    q_qdot = np.array(np.concatenate((q, qdot)).reshape((1, 2 * dim)), dtype=np.float32)
+    q = rng.standard_normal(size=dim)
+    qdot = rng.standard_normal(size=dim)
+    q_qdot = np.array(np.concatenate((q, qdot)).reshape((1, 2 * dim)), dtype=np.float64)
     L = lagrangian(q_qdot).numpy()[0]
     L_manual = 0.5 * np.dot(qdot, np.dot(M_mat, qdot)) - 0.5 * np.dot(
         q, np.dot(A_mat, q)
     )
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert abs(L - L_manual) < tolerance
 
 
@@ -73,11 +73,11 @@ def test_harmonic_oscillator_acceleration(rng, dim):
     M_mat, A_mat = harmonic_oscillator_matrices(dim)
     lagrangian = HarmonicOscillatorLagrangian(dim, M_mat, A_mat)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q_qdot = tf.constant(rng.normal(size=(1, 2 * dim)), dtype=tf.float32)
+    q_qdot = tf.constant(rng.standard_normal(size=(1, 2 * dim)), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = HarmonicOscillatorSystem(dim, M_mat, A_mat)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
-    tolerance = 1.0e-4
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
@@ -89,15 +89,15 @@ def test_xy_model_lagrangian(rng, dim):
     :arg dim: dimension of state space
     """
     lagrangian = XYModelLagrangian(dim)
-    q = rng.normal(size=dim)
-    qdot = rng.normal(size=dim)
-    q_qdot = np.array(np.concatenate((q, qdot)).reshape((1, 2 * dim)), dtype=np.float32)
+    q = rng.standard_normal(size=dim)
+    qdot = rng.standard_normal(size=dim)
+    q_qdot = np.array(np.concatenate((q, qdot)).reshape((1, 2 * dim)), dtype=np.float64)
     L = lagrangian(q_qdot).numpy()[0]
     a_lat = 1.0 / dim
     L_manual = 0.5 * a_lat * np.dot(qdot, qdot) - 1.0 / a_lat * np.sum(
         -np.cos(q - np.roll(q, -1)) + 1.0
     )
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert abs(L - L_manual) < tolerance
 
 
@@ -112,11 +112,11 @@ def test_xy_model_acceleration(rng, dim):
     """
     lagrangian = XYModelLagrangian(dim)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q_qdot = tf.constant(rng.normal(size=(1, 2 * dim)), dtype=tf.float32)
+    q_qdot = tf.constant(rng.standard_normal(size=(1, 2 * dim)), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = XYModelSystem(dim)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
@@ -134,11 +134,11 @@ def test_double_pendulum_acceleration(rng):
     L1 = 0.87
     lagrangian = DoublePendulumLagrangian(m0, m1, L0, L1)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q_qdot = tf.constant(rng.normal(size=(1, 4)), dtype=tf.float32)
+    q_qdot = tf.constant(rng.standard_normal(size=(1, 4)), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = DoublePendulumSystem(m0, m1, L0, L1)
     acc = dynamical_system.call(np.reshape(q_qdot, 4))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
@@ -160,10 +160,10 @@ def test_relativistic_charged_particle_acceleration(rng, constant_E_electric):
     lagrangian_dynamical_system = RelativisticChargedParticleLagrangianDynamicalSystem(
         lagrangian, dynamical_system.A_vec_func
     )
-    q_qdot = tf.constant(rng.normal(size=[1, 8]), dtype=tf.float32)
+    q_qdot = tf.constant(rng.standard_normal(size=[1, 8]), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     acc = dynamical_system.call(np.reshape(q_qdot, [8]))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
@@ -180,11 +180,11 @@ def test_double_well_potential_acceleration(rng, dim):
     kappa = 1.08
     lagrangian = DoubleWellPotentialLagrangian(dim, mass, mu, kappa)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q_qdot = tf.constant(rng.normal(size=(1, 2 * dim)), dtype=tf.float32)
+    q_qdot = tf.constant(rng.standard_normal(size=(1, 2 * dim)), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = DoubleWellPotentialSystem(dim, mass, mu, kappa)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
@@ -203,11 +203,11 @@ def test_two_particle_acceleration(rng, dim_space):
     dim = 2 * dim_space
     lagrangian = TwoParticleLagrangian(dim_space, mass1, mass2, mu, kappa)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q_qdot = tf.constant(rng.normal(size=(1, 2 * dim)), dtype=tf.float32)
+    q_qdot = tf.constant(rng.standard_normal(size=(1, 2 * dim)), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = TwoParticleSystem(dim_space, mass1, mass2, mu, kappa)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
@@ -220,11 +220,11 @@ def test_kepler_acceleration(rng):
     alpha = 0.97
     lagrangian = KeplerLagrangian(mass, alpha)
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
-    q_qdot = tf.constant(rng.normal(size=(1, 6)), dtype=tf.float32)
+    q_qdot = tf.constant(rng.standard_normal(size=(1, 6)), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = KeplerSystem(mass, alpha)
     acc = dynamical_system.call(np.reshape(q_qdot, [6]))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 
 
@@ -239,13 +239,13 @@ def test_schwarzschild_acceleration(rng):
     lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
     r0 = 10 * r_s
     v0 = 1.26 * np.sqrt(0.5 * r_s / r0) / np.sqrt(1 - r_s / r0)
-    x0 = np.asarray([0, r0, 0, 0]) + sigma * rng.normal(4)
-    u0 = np.asarray([0, 0, v0, 0]) + sigma * rng.normal(4)
+    x0 = np.asarray([0, r0, 0, 0]) + sigma * rng.standard_normal(4)
+    u0 = np.asarray([0, 0, v0, 0]) + sigma * rng.standard_normal(4)
     # make sure that the 4-velocity has norm -1
     u0[0] = lagrangian.zero_velocity(x0[1:4], u0[1:4])
-    q_qdot = tf.constant(np.concatenate([x0, u0]), shape=[1, 8], dtype=tf.float32)
+    q_qdot = tf.constant(np.concatenate([x0, u0]), shape=[1, 8], dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = SchwarzschildSystem(r_s)
     acc = dynamical_system.call(np.reshape(q_qdot, [8]))
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert np.linalg.norm(lagrangian_acc - acc) / np.linalg.norm(acc) < tolerance

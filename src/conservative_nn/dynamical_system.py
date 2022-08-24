@@ -51,7 +51,7 @@ class HarmonicOscillatorSystem(DynamicalSystem):
             self.acceleration_code += f"acceleration[{j:d}] = -("
             for k in range(self.dim):
                 Minv_A_jk = self.Minv_A[j, k]
-                self.acceleration_code += f"+ ({Minv_A_jk:e})*q[{k:d}]"
+                self.acceleration_code += f"+ ({Minv_A_jk:20.14e})*q[{k:d}]"
             self.acceleration_code += ");\n"
 
     def call(self, y):

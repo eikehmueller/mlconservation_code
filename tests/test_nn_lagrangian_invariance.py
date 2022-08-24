@@ -60,9 +60,11 @@ def test_xymodel_nn_lagrangian_rotation_invariance(rng, dense_layers, dim):
     # rotation angle
     phi = 1.1
     # tolerance for tests
-    tolerance = 2.0e-5
-    q = rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
-    qdot = rng.normal(size=(n_samples, dim))
+    tolerance = 1.0e-12
+    q = np.asarray(
+        rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim)), dtype=np.float64
+    )
+    qdot = rng.standard_normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
     X_rotated = np.concatenate([q + phi, qdot], axis=1)
     dL = nn_lagrangian(X_rotated) - nn_lagrangian(X)
@@ -91,9 +93,11 @@ def test_xymodel_nn_lagrangian_shift_invariance(rng, dense_layers, dim, offset):
     # rotation angle
     phi = 1.1
     # tolerance for tests
-    tolerance = 2.0e-5
-    q = rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim))
-    qdot = rng.normal(size=(n_samples, dim))
+    tolerance = 1.0e-12
+    q = np.asarray(
+        rng.uniform(low=-np.pi, high=+np.pi, size=(n_samples, dim)), dtype=np.float64
+    )
+    qdot = rng.standard_normal(size=(n_samples, dim))
     X = np.concatenate([q, qdot], axis=1)
     X_shifted = np.concatenate(
         [np.roll(q, offset, axis=1), np.roll(qdot, offset, axis=1)], axis=1
@@ -137,7 +141,7 @@ def test_xymodel_nn_eigenstate_shift_invariance(rng, dense_layers):
     delta_1 = 0.3
     delta_2 = 1.7
     # tolerance for tests
-    tolerance = 2.0e-5
+    tolerance = 1.0e-12
     q0 = np.asarray(
         alpha_1 * np.cos(0.5 * np.pi * np.arange(dim) + delta_1), dtype=np.float32
     )
@@ -169,9 +173,9 @@ def test_single_particle_lagrangian_rotation_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 2.5e-5
-    q = rng.normal(size=(n_samples, dim))
-    qdot = rng.normal(size=(n_samples, dim))
+    tolerance = 1.0e-12
+    q = rng.standard_normal(size=(n_samples, dim))
+    qdot = rng.standard_normal(size=(n_samples, dim))
     if reflection_invariant:
         R_rot = ortho_group.rvs(dim, random_state=rng)
     else:
@@ -218,16 +222,16 @@ def test_two_particle_lagrangian_invariance(
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 5.0e-5
-    x1 = rng.normal(size=(n_samples, dim_space))
-    x2 = rng.normal(size=(n_samples, dim_space))
-    u1 = rng.normal(size=(n_samples, dim_space))
-    u2 = rng.normal(size=(n_samples, dim_space))
+    tolerance = 1.0e-12
+    x1 = rng.standard_normal(size=(n_samples, dim_space))
+    x2 = rng.standard_normal(size=(n_samples, dim_space))
+    u1 = rng.standard_normal(size=(n_samples, dim_space))
+    u2 = rng.standard_normal(size=(n_samples, dim_space))
     if reflection_invariant:
         R_rot = ortho_group.rvs(dim_space, random_state=rng)
     else:
         R_rot = special_ortho_group.rvs(dim_space, random_state=rng)
-    offset = rng.normal(size=dim_space)
+    offset = rng.standard_normal(size=dim_space)
     X = np.concatenate([x1, x2, u1, u2], axis=1)
     rotate = lambda v: np.einsum("ij,aj->ai", R_rot, v) if rotation_invariant else v
     translate = lambda v: v + offset if translation_invariant else v
@@ -246,9 +250,9 @@ def test_schwarzschild_lagrangian_rotation_invariance(rng, dense_layers):
     # number of samples to check
     n_samples = 4
     # tolerance for tests
-    tolerance = 2.0e-5
-    q = rng.normal(size=(n_samples, 4))
-    qdot = rng.normal(size=(n_samples, 4))
+    tolerance = 1.0e-12
+    q = rng.standard_normal(size=(n_samples, 4))
+    qdot = rng.standard_normal(size=(n_samples, 4))
     R_rot = np.identity(4)
     R_rot[1:, 1:] = ortho_group.rvs(3, random_state=rng)
     X = np.concatenate([q, qdot], axis=1)

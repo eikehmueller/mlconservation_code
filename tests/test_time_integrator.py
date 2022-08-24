@@ -117,10 +117,10 @@ def test_time_integrator(rng, TimeIntegratorCls, dynamical_system):
     dt = 0.1  # timestep size
     nsteps = 10  # number of timesteps
     dim = dynamical_system.dim
-    q0 = rng.normal(size=dim)
-    qdot0 = rng.normal(size=dim)
-    q_c = rng.normal(size=dim)
-    qdot_c = rng.normal(size=dim)
+    q0 = rng.standard_normal(size=dim)
+    qdot0 = rng.standard_normal(size=dim)
+    q_c = rng.standard_normal(size=dim)
+    qdot_c = rng.standard_normal(size=dim)
     time_integrator = TimeIntegratorCls(dynamical_system, dt)
     # Integrate using Python
     time_integrator.set_state(q0, qdot0)
@@ -135,7 +135,7 @@ def test_time_integrator(rng, TimeIntegratorCls, dynamical_system):
     q_c = np.array(time_integrator.q)
     qdot_c = np.array(time_integrator.qdot)
     # Compare
-    tolerance = 1.0e-5
+    tolerance = 1.0e-12
     assert (np.linalg.norm(q_c - q_python) < tolerance) and (
         np.linalg.norm(qdot_c - qdot_python) < tolerance
     )
