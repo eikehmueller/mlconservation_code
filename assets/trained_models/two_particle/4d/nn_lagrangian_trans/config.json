@@ -1,0 +1,6 @@
+{
+    "dim_space": 4,
+    "rotation_invariant": false,
+    "translation_invariant": true,
+    "reflection_invariant": false
+}

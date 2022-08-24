@@ -1,0 +1,52 @@
+# ------------------------------
+# Parameters for NN training run
+# ------------------------------
+#
+# to train the model, use 
+#
+#    python train_model.py --parameterfile training_parameters.toml
+
+title = "Training parameter for Kepler system"
+
+# Training parameters
+[training]
+    batch_size = 128
+    epochs = 1000
+    steps_per_epoch = 100
+    learning_rate = 1.0E-3
+    schedule = "CosineDecay"   # training schedule, can be "Constant" or "CosineDecay"
+    alpha = 1.0E-2          # alpha parameter in CosineDecay
+    
+# Name of file to save trained model to
+[saved_model]
+    filename = "assets/trained_models/schwarzschild/nn_lagrangian_23Aug2022"
+
+# System to be simulated
+[system]
+    name = "Schwarzschild" # Can be "Kepler", "DoubleWell", "TwoParticle", "Schwarzschild"
+    sigma = 1.0E-3  # Magnitude of normal noise
+
+# Symmetries of the NN model
+[symmetry]
+    rotation_invariant = true     # enforce rotational invariance?     
+    translation_invariant = true  # enforce translational invariance?
+    reflection_invariant = true   # enforce reflection invariance?
+
+# System specific parameters
+[system_specific.two_particle]
+    dim_space = 3                 # dimension of space
+    mass = [1.0,1.0]              # masses of the two particles
+    mu = 1.0                      # coefficient of quadratic term in potential
+    kappa = 1.0                   # coefficient of quartic term in potential
+[system_specific.double_well]
+    dim = 4
+    mass = 1.0                    # masses of particle
+    mu = 1.0                      # coefficient of quadratic term in potential
+    kappa = 1.0                   # coefficient of quartic term in potential
+[system_specific.kepler]
+    mass = 1.0                    # mass of particle
+    alpha = 1.0                   # coefficient of 1/r term
+    excentricity = 0.5            # excentricity of orbit
+    angular_momentum =  1.0       # angular momentum    
+[system_specific.schwarzschild]
+    r_s = 0.1                     # Schwarzschild radius

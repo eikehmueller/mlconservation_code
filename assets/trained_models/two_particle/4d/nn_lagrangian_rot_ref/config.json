@@ -1,5 +1,6 @@
 {
-    "dim": 3,
+    "dim_space": 4,
     "rotation_invariant": true,
+    "translation_invariant": false,
     "reflection_invariant": true
 }
