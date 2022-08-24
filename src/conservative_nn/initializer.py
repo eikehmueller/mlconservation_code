@@ -11,12 +11,15 @@ class NormalRandomLookup:
 
     Class for reading json files which contain a single list of numbers.
     This guarantees that the exact same random numbers are used in every run.
+
+    :arg verbose: print additional information?
     """
 
-    def __init__(self):
+    def __init__(self, verbose=False):
         """Create new instance"""
         filename = os.path.join(os.path.dirname(__file__), "random_normal_table.json")
-        print(f"Loading random numbers from file {filename}")
+        if verbose:
+            print(f"Loading random numbers from file {filename}")
         with open(filename, "r", encoding="utf8") as f:
             self.data = np.asarray(json.load(f), dtype=np.float32)
         self.reset()
