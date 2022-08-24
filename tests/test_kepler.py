@@ -4,12 +4,13 @@ Check that the analytical solution is consistent with the corresponding dynamica
 """
 
 import numpy as np
+from common import tolerance
 
 from conservative_nn.kepler import KeplerSolution
 from conservative_nn.dynamical_system import KeplerSystem
 
 
-def test_kepler_acceleration_analytical():
+def test_kepler_acceleration_analytical(tolerance):
     """Check that the acceleration computed with the analytical solution class
     agrees with the acceleration from the corresponding dynamical system"""
     mass = 0.983
@@ -31,5 +32,4 @@ def test_kepler_acceleration_analytical():
     q_qdot = np.concatenate([q, qdot], axis=0)
     acc_analytical = kepler_solution.acceleration(phi)
     acc = dynamical_system.call(q_qdot)
-    tolerance = 1.0e-12
     assert np.linalg.norm(acc - acc_analytical) < tolerance

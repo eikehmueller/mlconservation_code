@@ -31,3 +31,9 @@ def harmonic_oscillator_matrices(dim):
 def rng():
     """Return random generator fixture that can be used by all tests"""
     return np.random.default_rng(21494917)
+
+
+@pytest.fixture
+def tolerance():
+    """Set tolerance for all tests"""
+    return 1.0e-12

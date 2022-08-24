@@ -13,7 +13,7 @@ from conservative_nn.dynamical_system import (
     SchwarzschildSystem,
 )
 from conservative_nn.time_integrator import ForwardEulerIntegrator, RK4Integrator
-from common import harmonic_oscillator_matrices, rng
+from common import harmonic_oscillator_matrices, rng, tolerance
 
 
 @pytest.fixture
@@ -111,7 +111,7 @@ def dynamical_system(request):
 
 
 @pytest.mark.parametrize("TimeIntegratorCls", [ForwardEulerIntegrator, RK4Integrator])
-def test_time_integrator(rng, TimeIntegratorCls, dynamical_system):
+def test_time_integrator(rng, tolerance, TimeIntegratorCls, dynamical_system):
     """Check that the time integrators gives the same results
     if the generated C-code is used."""
     dt = 0.1  # timestep size
@@ -135,7 +135,6 @@ def test_time_integrator(rng, TimeIntegratorCls, dynamical_system):
     q_c = np.array(time_integrator.q)
     qdot_c = np.array(time_integrator.qdot)
     # Compare
-    tolerance = 1.0e-12
     assert (np.linalg.norm(q_c - q_python) < tolerance) and (
         np.linalg.norm(qdot_c - qdot_python) < tolerance
     )
