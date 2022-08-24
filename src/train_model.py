@@ -54,6 +54,14 @@ parser.add_argument(
     default="training_parameters.toml",
     help="name of toml file with training parameters",
 )
+parser.add_argument(
+    "--tblogdir",
+    dest="tblogdir",
+    action="store",
+    default="tb_logs",
+    help="name of directory used for tensorboard logging",
+)
+
 cmdline_args = parser.parse_args()
 
 print("==========================================")
@@ -68,7 +76,7 @@ print(cmdline_args.parameterfile)
 print("----------------- begin ----------------------")
 print(toml.dumps(parameters))
 print("----------------- end ------------------------")
-
+print(f"writing tensorboard logs to {cmdline_args.tblogdir}")
 
 # Set training parameters passed from file
 EPOCHS = parameters["training"]["epochs"]
@@ -206,8 +214,8 @@ model.compile(
     metrics=[],
     optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
 )
-log_dir = "./tb_logs/"
-tensorboard_cb = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
+
+tensorboard_cb = tf.keras.callbacks.TensorBoard(log_dir=cmdline_args.tblogdir)
 
 # ---- Fit model ----
 result = model.fit(
