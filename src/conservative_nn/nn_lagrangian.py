@@ -67,14 +67,15 @@ class NNLagrangian(tf.keras.layers.Layer):
             json.dump(layers, f, cls=ndarrayEncoder, indent=4)
 
     @classmethod
-    def from_saved_model(cls, filepath):
+    def from_saved_model(cls, filepath, dtype=None):
         """Construct object from saved model in a specified directory
 
-        :arg directory: directory in which the model will be stored
+        :arg filepath: directory in which the model will be stored
+        :arg dtype: datatype of weights. Use datatype specified in file if None
         """
         import keras  # pylint: disable=reimported,redefined-outer-name,unused-import,import-outside-toplevel
 
-        # Load configurstion
+        # Load configuration
         with open(os.path.join(filepath, "config.json"), "r", encoding="utf8") as f:
             config = json.load(f)
         config["dense_layers"] = None
@@ -89,6 +90,9 @@ class NNLagrangian(tf.keras.layers.Layer):
             layer_cls = eval(layer_spec["class"])  # pylint: disable=eval-used
             config = layer_spec["config"]
             weights = layer_spec["weights"]
+            if dtype is not None:
+                config["dtype"] = dtype
+                weights = [weight.astype(dtype) for weight in weights]
             layer = layer_cls.from_config(config)
             layer_weights[layer.name] = weights
             model.dense_layers.append(layer)
