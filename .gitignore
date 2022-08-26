@@ -5,3 +5,4 @@ generated_code
 events.*
 *checkpoint*
 *egg-info*
+tb_logs
