@@ -132,7 +132,6 @@ class TwoParticleConstantInitializer:
 
     def __init__(self, dim, mass1=1.0, mass2=1.0, perturbation=0):
         self.dim = dim
-        assert dim <= 8, "only dimensions up to 8 are supported"
         self.mass1 = mass1
         self.mass2 = mass2
         self.perturbation = perturbation
