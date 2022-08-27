@@ -50,3 +50,4 @@ title = "Template parameters"
     angular_momentum = 1.0  # angular momentum
 [system_specific.schwarzschild]
     r_s = 0.1               # Schwarzschild radius
+    time_independent = true # use Lagrangian with no explicit time dependence

@@ -268,12 +268,16 @@ class SchwarzschildNNLagrangian(NNLagrangian):
 
     :arg dense_layers: intermediate dense layers
     :arg rotation_invariant: enforce rotational invariance
+    :arg time_independent: does the Lagrangian not explicitly depend on time?
     """
 
-    def __init__(self, dense_layers, rotation_invariant=True, **kwargs):
+    def __init__(
+        self, dense_layers, rotation_invariant=True, time_independent=True, **kwargs
+    ):
         super().__init__(dense_layers, **kwargs)
         self.dim = 4
         self.rotation_invariant = rotation_invariant
+        self.time_independent = time_independent
 
     def call(self, inputs):
         """Evaluate the Lagrangian for a given vector (q,qdot)
@@ -289,13 +293,16 @@ class SchwarzschildNNLagrangian(NNLagrangian):
             x_spat = tf.stack(q_qdot[1:4], axis=-1)
             v_spat = tf.stack(q_qdot[5:8], axis=-1)
             # construct the five invariants
-            invariants = [
+            invariants = [t, t_dot] + [
                 tf.reduce_sum(tf.multiply(*pair), axis=-1)
                 for pair in list(combinations_with_replacement([x_spat, v_spat], 2))
-            ] + [t, t_dot]
+            ]
             x = tf.stack(invariants, axis=-1)
         else:
             x = inputs
+        # Remove t from the input tensor if the Lagrangian is time-independent
+        if self.time_independent:
+            x = tf.stack(tf.unstack(x, axis=-1)[1:], axis=-1)
         for layer in self.dense_layers:
             x = layer(x)
         return x
@@ -304,6 +311,7 @@ class SchwarzschildNNLagrangian(NNLagrangian):
         """Get the model configuration"""
         return {
             "rotation_invariant": self.rotation_invariant,
+            "time_independent": self.time_independent,
         }
 
     @property

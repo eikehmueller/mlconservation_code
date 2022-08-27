@@ -162,6 +162,9 @@ elif parameters["system"]["name"] == "Schwarzschild":
     nn_lagrangian = SchwarzschildNNLagrangian(
         dense_layers,
         rotation_invariant=rotation_invariant,
+        time_independent=parameters["system_specific"]["schwarzschild"][
+            "time_independent"
+        ],
     )
 else:
     print("ERROR: unknown system :" + parameters["system"])
