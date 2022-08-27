@@ -1,3 +1,4 @@
 {
-    "rotation_invariant": true
+    "rotation_invariant": true,
+    "time_independent": true
 }

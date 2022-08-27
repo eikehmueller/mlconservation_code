@@ -19,7 +19,7 @@ title = "Training parameter for Kepler system"
     
 # Name of file to save trained model to
 [saved_model]
-    filename = "assets/trained_models/schwarzschild/nn_lagrangian_rot_27Aug2022"
+    filename = "assets/trained_models/schwarzschild/nn_lagrangian_27Aug2022"
 
 # System to be simulated
 [system]
@@ -28,9 +28,9 @@ title = "Training parameter for Kepler system"
 
 # Symmetries of the NN model
 [symmetry]
-    rotation_invariant = true     # enforce rotational invariance?     
-    translation_invariant = true  # enforce translational invariance?
-    reflection_invariant = true   # enforce reflection invariance?
+    rotation_invariant = false     # enforce rotational invariance?     
+    translation_invariant = false  # enforce translational invariance?
+    reflection_invariant = false   # enforce reflection invariance?
 
 # System specific parameters
 [system_specific.two_particle]
