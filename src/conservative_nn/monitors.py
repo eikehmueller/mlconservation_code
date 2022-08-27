@@ -1,6 +1,7 @@
 """Monitors for quantities of interest along trajectories"""
 import numpy as np
 from conservative_nn.dynamical_system import (
+    SchwarzschildSystem,
     TwoParticleSystem,
     DoubleWellPotentialSystem,
     KeplerSystem,
@@ -69,8 +70,6 @@ class InvariantMonitor(Monitor):
 class SingleParticleInvariantMonitor(Monitor):
     """Monitor for angular momentum invariants of a single particle
 
-    Stores the invariants of the dynamical system in an array of size ninvariant x (nsteps+1)
-
     :arg dynamical_system: underlying dynamical system
     """
 
@@ -95,6 +94,36 @@ class SingleParticleInvariantMonitor(Monitor):
         for j in range(self.dim):
             for k in range(j + 1, self.dim):
                 invariants.append(self.mass * (u[j] * x[k] - u[k] * x[j]))
+                ell += 1
+        self._data.append(invariants)
+
+
+class SchwarzschildInvariantMonitor(Monitor):
+    """Monitor for angular momentum invariants of a particle moving in the Scharzschild metric
+
+    :arg dynamical_system: underlying dynamical system
+    """
+
+    def __init__(self, dynamical_system):
+        super().__init__()
+        assert isinstance(
+            dynamical_system, (SchwarzschildSystem)
+        ), "Monitor only works for instances of SchwarzschildSystem"
+        self.dynamical_system = dynamical_system
+        self.dim = 4
+
+    def __call__(self, time_integrator):
+        """Evaluate the monitor for value of the invariant of the underlying system
+
+        :arg time_integrator: time integrator to monitor
+        """
+        x = time_integrator.q[1 : self.dim]
+        u = time_integrator.qdot[1 : self.dim]
+        ell = 0
+        invariants = []
+        for j in range(self.dim - 1):
+            for k in range(j + 1, self.dim - 1):
+                invariants.append((u[j] * x[k] - u[k] * x[j]))
                 ell += 1
         self._data.append(invariants)
 
