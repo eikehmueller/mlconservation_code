@@ -11,7 +11,7 @@ title = "Training parameter for Kepler system"
 # Training parameters
 [training]
     batch_size = 128
-    epochs = 1000
+    epochs = 2500
     steps_per_epoch = 100
     learning_rate = 1.0E-3
     schedule = "CosineDecay"   # training schedule, can be "Constant" or "CosineDecay"
@@ -19,7 +19,7 @@ title = "Training parameter for Kepler system"
     
 # Name of file to save trained model to
 [saved_model]
-    filename = "assets/trained_models/schwarzschild/nn_lagrangian_27Aug2022"
+    filename = "assets/trained_models/schwarzschild/nn_lagrangian_28Aug2022"
 
 # System to be simulated
 [system]
