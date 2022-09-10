@@ -1,5 +1,7 @@
 """Monitors for quantities of interest along trajectories"""
+import json
 import numpy as np
+from conservative_nn.auxilliary import ndarrayDecoder, ndarrayEncoder
 from conservative_nn.dynamical_system import (
     SchwarzschildSystem,
     TwoParticleSystem,
@@ -10,28 +12,42 @@ from conservative_nn.dynamical_system import (
 
 class Monitor:
     def __init__(self):
-        """Class for accumulating data over a trajectory
-
-        :arg n: components of quantity to monitor
-        """
+        """Class for accumulating data over a trajectory"""
         self.reset()
 
     def reset(self):
         """Reset monitor"""
         self._data = []
+        self._np_data = None
 
     @property
     def data(self):
         """Get data as numpy array"""
-        return np.asarray(self._data).transpose()
+        if self._np_data is None:
+            self._np_data = np.asarray(self._data).transpose()
+        return self._np_data
+
+    def save_json(self, filepath):
+        """Save data to file in json format
+
+        :arg filepath: name of file to which the json data can be written
+        """
+        with open(filepath, "w", encoding="utf8") as f:
+            json.dump(self.data, f, cls=ndarrayEncoder, indent=4, ensure_ascii=True)
+
+    def load_json(self, filepath):
+        """Load data from file in json format
+
+        :arg filepath: name of file from which the json data is to be read
+        """
+        with open(filepath, "r", encoding="utf8") as f:
+            self._np_data = json.load(f, cls=ndarrayDecoder)
 
 
 class PositionMonitor(Monitor):
     """Monitor for current position
 
     Stores the current position in an array of size dim x (nsteps+1)
-
-    :arg dim: dimension of dynamical system
     """
 
     def __init__(self):
