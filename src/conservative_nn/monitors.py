@@ -61,6 +61,23 @@ class PositionMonitor(Monitor):
         self._data.append(list(time_integrator.q[:]))
 
 
+class VelocityMonitor(Monitor):
+    """Monitor for current velocity
+
+    Stores the current velocity in an array of size dim x (nsteps+1)
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, time_integrator):
+        """Evaluate the monitor for the current state of the time_integrator
+
+        :arg time_integrator: time integrator to monitor
+        """
+        self._data.append(list(time_integrator.qdot[:]))
+
+
 class InvariantMonitor(Monitor):
     """Monitor for invariants of dynamical system
 
@@ -183,6 +200,7 @@ class TwoParticleInvariantMonitor(Monitor):
                 ) + self.mass2 * (u2[j] * x2[k] - u2[k] * x2[j])
                 ell += 1
         self._data.append(list(invariants))
+        
 
 
 class VelocitySumMonitor(Monitor):
