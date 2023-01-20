@@ -233,8 +233,6 @@ class TwoParticleLagrangian(Lagrangian):
         assert self.mu > 0, "coefficient of quadratic term must be positive"
         self.kappa = float(kappa)
         assert self.kappa > 0, "coefficient of quartic term must be positive"
-        assert self.mu > 0
-        assert self.kappa > 0
 
     def __call__(self, inputs):
         # Extract position and velocity
