@@ -9,6 +9,7 @@ from conservative_nn.dynamical_system import (
     RelativisticChargedParticleSystem,
     DoubleWellPotentialSystem,
     TwoParticleSystem,
+    MultiParticleSystem,
     KeplerSystem,
     SchwarzschildSystem,
 )
@@ -79,6 +80,17 @@ def two_particle_system():
 
 
 @pytest.fixture
+def multi_particle_system():
+    """Construct multiple particle system object"""
+    dim = 3
+    n_part = 4
+    masses = [0.9, 1.1, 0.7, 1.3]
+    mu = 1.1
+    kappa = 0.97
+    return MultiParticleSystem(dim, n_part, masses, mu, kappa)
+
+
+@pytest.fixture
 def kepler_system():
     """Construct Kepler system object"""
     mass = 0.87
@@ -102,6 +114,7 @@ def schwarzschild_system():
         "relativistic_charged_particle_system_varying_E",
         "double_well_potential_system",
         "two_particle_system",
+        "multi_particle_system",
         "kepler_system",
         "schwarzschild_system",
     ]

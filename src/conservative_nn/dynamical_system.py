@@ -432,6 +432,110 @@ class TwoParticleSystem(DynamicalSystem):
         return np.concatenate([force / self.mass1, -force / self.mass2])
 
 
+class MultiParticleSystem(DynamicalSystem):
+    """System of N d-dimensional particles interacting via a quartic potential
+
+    If x_1,...,x_N are the particle positions and u_1,...,u_N are their
+    velocities, then the Lagrangian is given by
+
+      L(x,u) = sum_{k=1}^N m_k/2*u_k^2 - sum_{k<ell}^N V(x_k-x_ell)
+
+    where the (symmetric, rotationally invariant) potential has the form
+
+      V(x) = -mu/2*|x|^2 + kappa/4*|x|^4.
+
+    The masses of the particles are m_1,...,m_N.
+
+    Note that the Lagrangian is invariant under rotations and translations
+    This results in the accelerations
+
+      d(u_k)_j/dt = sum_{ell != k} (mu - kappa*|x_k-x_ell|^2)
+                                   * ((x_k)_j-(x_ell)_j)
+
+    :arg dim_space: dimension of space (note that this is *half* the phase space dimension)
+    :arg n_part: number N of particles
+    :arg masses: Masses of the particles. Can eiher be a list of length N
+       or a single number if all masses are identical
+    :arg mu: coefficient of the quadratic term, should be positive
+    :arg kappa: coefficient of the quartic term, should be positive
+    """
+
+    def __init__(self, dim_space, n_part, masses=1.0, mu=1.0, kappa=1.0):
+        super().__init__(n_part * dim_space)
+        self.dim_space = dim_space
+        self.n_part = n_part
+        if type(masses) is list:
+            assert len(masses) == n_part
+            self.masses = list(masses)
+        else:
+            self.masses = self.n_part * [float(masses)]
+        self.mu = float(mu)
+        self.kappa = float(kappa)
+        assert self.mu > 0
+        assert self.kappa > 0
+        self.preamble_code = (
+            f"double mass[{self.n_part}] = {{"
+            + ",".join([str(float(mass)) for mass in self.masses])
+            + f"}};"
+        )
+        self.acceleration_code = f"""
+        for (int j=0;j<{self.dim};++j) 
+            acceleration[j] = 0.0;
+        // loop over all pairs of particles
+        for (int k=0;k<{self.n_part};++k) {{
+            for (int ell=k+1;ell<{self.n_part};++ell) {{
+                // compute sq_sq = ||x_k - x_ell||^2
+                double dq_sq = 0.0;
+                for (int j=0;j<{self.dim_space};++j) {{
+                    double dq = q[{self.dim_space}*k+j]-q[{self.dim_space}*ell+j];
+                    dq_sq += dq*dq;
+                }}
+                // update accelerations on both particles
+                for (int j=0;j<{self.dim_space};++j) {{
+                    double dq = q[{self.dim_space}*k+j]-q[{self.dim_space}*ell+j];
+                    double force = (({self.mu}) - ({self.kappa})*dq_sq)*dq;
+                    acceleration[{self.dim_space}*k+j] += force/mass[k];
+                    acceleration[{self.dim_space}*ell+j] -= force/mass[ell];
+                }}
+            }}
+        }}
+        """
+
+    def call(self, y):
+        """Return the acceleration
+
+        :arg y: position and velocity vector
+                y = ((x_1)^0,...,(x_1)^{d-1},...,(x_N)^0,...,(x_N)^{d-1},
+                     (u_1)^0,...,(u_1)^{d-1},...,(u_N)^0,...,(u_N)^{d-1})
+        """
+        acceleration = np.zeros(self.dim)
+        # loop over all pairs (k,ell) of particles
+        for k in range(self.n_part):
+            for ell in range(k + 1, self.n_part):
+                # compute ||x_k - x_ell||^2
+                dq_sq = np.sum(
+                    (
+                        y[self.dim_space * k : self.dim_space * (k + 1)]
+                        - y[self.dim_space * ell : self.dim_space * (ell + 1)]
+                    )
+                    ** 2
+                )
+                # force between the two particles k and ell
+                force = (self.mu - self.kappa * dq_sq) * (
+                    y[self.dim_space * k : self.dim_space * (k + 1)]
+                    - y[self.dim_space * ell : self.dim_space * (ell + 1)]
+                )
+                # update acceleration of particle k
+                acceleration[self.dim_space * k : self.dim_space * (k + 1)] += (
+                    force / self.masses[k]
+                )
+                # update acceleration of particle ell
+                acceleration[self.dim_space * ell : self.dim_space * (ell + 1)] -= (
+                    force / self.masses[ell]
+                )
+        return acceleration
+
+
 class KeplerSystem(DynamicalSystem):
     """Motion of a non-relativistic particle under a 1/r central field
 
