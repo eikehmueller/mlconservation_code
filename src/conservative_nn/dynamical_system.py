@@ -420,7 +420,7 @@ class TwoParticleSystem(DynamicalSystem):
         """
 
     def call(self, y):
-        """Return the acceleratio
+        """Return the acceleration
 
         :arg y: position and velocity vector
                 y = (x1^0,...,x1^{d-1},x2^0,...,x2^{d-1},u1^0,...,u1^{d-1},u2^0,...,u2^{d-1})
