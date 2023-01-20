@@ -151,3 +151,38 @@ def test_time_integrator(rng, tolerance, TimeIntegratorCls, dynamical_system):
     assert (np.linalg.norm(q_c - q_python) < tolerance) and (
         np.linalg.norm(qdot_c - qdot_python) < tolerance
     )
+
+
+@pytest.mark.parametrize("TimeIntegratorCls", [ForwardEulerIntegrator, RK4Integrator])
+@pytest.mark.parametrize("dim_space", [1, 2, 3, 4])
+def test_time_integrator_two_particle(rng, tolerance, TimeIntegratorCls, dim_space):
+    """Check that the two-particle system gives the same results as the multi-particle system
+    with N=2 particles."""
+    dt = 0.1  # timestep size
+    nsteps = 10  # number of timesteps
+
+    masses = [1.3, 0.72]
+    mu = 1.1
+    kappa = 0.97
+    two_particle_system = TwoParticleSystem(dim_space, masses[0], masses[1], mu, kappa)
+    multi_particle_system = MultiParticleSystem(2, dim_space, masses, mu, kappa)
+
+    dim = 2 * dim_space  # dimension of dynamical system
+    q0 = rng.standard_normal(size=dim)
+    qdot0 = rng.standard_normal(size=dim)
+    time_integrator_two_particle = TimeIntegratorCls(two_particle_system, dt)
+    time_integrator_multi_particle = TimeIntegratorCls(multi_particle_system, dt)
+    # Integrate using two-particle system
+    time_integrator_two_particle.set_state(q0, qdot0)
+    time_integrator_two_particle.integrate(nsteps)
+    q_two_particle = np.array(time_integrator_two_particle.q)
+    qdot_two_particle = np.array(time_integrator_two_particle.qdot)
+    # Integrate using multi-particle system
+    time_integrator_multi_particle.set_state(q0, qdot0)
+    time_integrator_multi_particle.integrate(nsteps)
+    q_multi_particle = np.array(time_integrator_multi_particle.q)
+    qdot_multi_particle = np.array(time_integrator_multi_particle.qdot)
+    # Compare
+    assert (np.linalg.norm(q_two_particle - q_multi_particle) < tolerance) and (
+        np.linalg.norm(qdot_two_particle - qdot_multi_particle) < tolerance
+    )
