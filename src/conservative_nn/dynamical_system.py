@@ -452,15 +452,15 @@ class MultiParticleSystem(DynamicalSystem):
       d(u_k)_j/dt = sum_{ell != k} (mu - kappa*|x_k-x_ell|^2)
                                    * ((x_k)_j-(x_ell)_j)
 
-    :arg dim_space: dimension of space (note that this is *half* the phase space dimension)
     :arg n_part: number N of particles
+    :arg dim_space: dimension of space (note that this is *half* the phase space dimension)
     :arg masses: Masses of the particles. Can eiher be a list of length N
        or a single number if all masses are identical
     :arg mu: coefficient of the quadratic term, should be positive
     :arg kappa: coefficient of the quartic term, should be positive
     """
 
-    def __init__(self, dim_space, n_part, masses=1.0, mu=1.0, kappa=1.0):
+    def __init__(self, n_part, dim_space, masses=1.0, mu=1.0, kappa=1.0):
         super().__init__(n_part * dim_space)
         self.dim_space = dim_space
         self.n_part = n_part

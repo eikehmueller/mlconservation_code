@@ -87,7 +87,7 @@ def multi_particle_system():
     masses = [0.9, 1.1, 0.7, 1.3]
     mu = 1.1
     kappa = 0.97
-    return MultiParticleSystem(dim, n_part, masses, mu, kappa)
+    return MultiParticleSystem(n_part, dim, masses, mu, kappa)
 
 
 @pytest.fixture
