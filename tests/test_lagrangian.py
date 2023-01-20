@@ -10,6 +10,7 @@ from conservative_nn.lagrangian import (
     RelativisticChargedParticleLagrangian,
     DoubleWellPotentialLagrangian,
     TwoParticleLagrangian,
+    MultiParticleLagrangian,
     KeplerLagrangian,
     SchwarzschildLagrangian,
 )
@@ -21,6 +22,7 @@ from conservative_nn.dynamical_system import (
     DoublePendulumSystem,
     DoubleWellPotentialSystem,
     TwoParticleSystem,
+    MultiParticleSystem,
     KeplerSystem,
     SchwarzschildSystem,
 )
@@ -201,6 +203,29 @@ def test_two_particle_acceleration(rng, tolerance, dim_space):
     q_qdot = tf.constant(rng.standard_normal(size=(1, 2 * dim)), dtype=tf.float64)
     lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
     dynamical_system = TwoParticleSystem(dim_space, mass1, mass2, mu, kappa)
+    acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
+    assert np.linalg.norm(lagrangian_acc - acc) < tolerance
+
+
+@pytest.mark.parametrize("n_part", [2, 3, 4])
+@pytest.mark.parametrize("dim_space", [1, 2, 3, 4, 5, 6])
+def test_multiparticle_acceleration(rng, tolerance, n_part, dim_space):
+    """Check that the acceleration is correct for the multi particle Lagrangian.
+
+    Evaluate this for a random phase space vector (q,qdot)
+
+    :arg n_part: number of particles
+    :arg dim_space: dimension of state space
+    """
+    masses = list(rng.uniform(low=0.8, high=1.2, size=n_part))
+    mu = 0.97
+    kappa = 1.08
+    dim = n_part * dim_space
+    lagrangian = MultiParticleLagrangian(n_part, dim_space, masses, mu, kappa)
+    lagrangian_dynamical_system = LagrangianDynamicalSystem(lagrangian)
+    q_qdot = tf.constant(rng.standard_normal(size=(1, 2 * dim)), dtype=tf.float64)
+    lagrangian_acc = lagrangian_dynamical_system.call(q_qdot)
+    dynamical_system = MultiParticleSystem(n_part, dim_space, masses, mu, kappa)
     acc = dynamical_system.call(np.reshape(q_qdot, (2 * dim)))
     assert np.linalg.norm(lagrangian_acc - acc) < tolerance
 

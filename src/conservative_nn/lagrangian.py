@@ -254,6 +254,58 @@ class TwoParticleLagrangian(Lagrangian):
         )
 
 
+class MultiParticleLagrangian(Lagrangian):
+    """Implements the Lagrangian of N interacting particles
+
+    L(x,u) = sum_{k=1}^N m_k/2*u_k^2 - sum_{k<ell}^N V(x_k-x_ell)
+
+    where the (symmetric, rotationally invariant) potential has the form
+
+      V(x) = -mu/2*|x|^2 + kappa/4*|x|^4.
+
+    Positions x_1,...,x_N and velocities u_1,...,u_N are d-dimensional vectors
+
+    :arg dim_space: dimension d of system
+    :arg masses: Masses of the particles. Can eiher be a list of length N
+       or a single number if all masses are identical
+    :arg mu: coefficient of quadratic term, should be positive
+    :arg kappa: coefficient of quartic term, should be positive
+    """
+
+    def __init__(self, n_part, dim_space, masses=1.0, mu=1.0, kappa=1.0):
+        super().__init__(n_part * dim_space)
+        self.n_part = n_part
+        if type(masses) is list:
+            assert len(masses) == n_part
+            self.masses = list(masses)
+        else:
+            self.masses = self.n_part * [float(masses)]
+        self.mu = float(mu)
+        assert self.mu > 0, "coefficient of quadratic term must be positive"
+        self.kappa = float(kappa)
+        assert self.kappa > 0, "coefficient of quartic term must be positive"
+
+    def __call__(self, inputs):
+        # Extract position and velocity
+        x_u = tf.split(inputs, 2 * self.n_part, axis=-1)
+        x, u = x_u[: self.n_part], x_u[self.n_part :]
+        # kinetic energy
+        T_kin = 0
+        for k in range(self.n_part):
+            T_kin += (
+                0.5 * self.masses[k] * tf.reduce_sum(tf.multiply(u[k], u[k]), axis=-1)
+            )
+        # potential energy
+        V_pot = 0
+        for k in range(self.n_part):
+            for ell in range(k + 1, self.n_part):
+                dx_sq = tf.reduce_sum(
+                    tf.multiply(x[k] - x[ell], x[k] - x[ell]), axis=-1
+                )
+                V_pot += -0.5 * self.mu * dx_sq + 0.25 * self.kappa * dx_sq**2
+        return T_kin - V_pot
+
+
 class KeplerLagrangian(Lagrangian):
     """Implements the Lagrangian of a particle moving in a 1/r central force field
 
