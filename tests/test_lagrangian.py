@@ -217,7 +217,7 @@ def test_multiparticle_acceleration(rng, tolerance, n_part, dim_space):
     :arg n_part: number of particles
     :arg dim_space: dimension of state space
     """
-    masses = list(rng.uniform(low=0.8, high=1.2, size=n_part))
+    masses = rng.uniform(low=0.8, high=1.2, size=n_part)
     mu = 0.97
     kappa = 1.08
     dim = n_part * dim_space

@@ -464,11 +464,14 @@ class MultiParticleSystem(DynamicalSystem):
         super().__init__(n_part * dim_space)
         self.dim_space = dim_space
         self.n_part = n_part
-        if type(masses) is list:
-            assert len(masses) == n_part
+        try:
             self.masses = list(masses)
-        else:
-            self.masses = self.n_part * [float(masses)]
+        except:
+            try:
+                self.masses = n_part * [float(masses)]
+            except:
+                raise TypeError("Can not convert masses to list")
+        assert len(masses) == n_part
         self.mu = float(mu)
         self.kappa = float(kappa)
         assert self.mu > 0

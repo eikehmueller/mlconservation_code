@@ -275,11 +275,14 @@ class MultiParticleLagrangian(Lagrangian):
     def __init__(self, n_part, dim_space, masses=1.0, mu=1.0, kappa=1.0):
         super().__init__(n_part * dim_space)
         self.n_part = n_part
-        if type(masses) is list:
-            assert len(masses) == n_part
+        try:
             self.masses = list(masses)
-        else:
-            self.masses = self.n_part * [float(masses)]
+        except:
+            try:
+                self.masses = n_part * [float(masses)]
+            except:
+                raise TypeError("Can not convert masses to list")
+        assert len(masses) == n_part
         self.mu = float(mu)
         assert self.mu > 0, "coefficient of quadratic term must be positive"
         self.kappa = float(kappa)
