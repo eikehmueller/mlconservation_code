@@ -5,9 +5,8 @@ import numpy as np
 from conservative_nn.lagrangian import SchwarzschildLagrangian
 
 
-class NormalRandomLookup:
-    """Lookup table for normally distributed random numbers that have been
-    saved to disk
+class RandomLookup:
+    """Lookup table for random numbers that have been saved to disk
 
     Class for reading json files which contain a single list of numbers.
     This guarantees that the exact same random numbers are used in every run.
@@ -15,9 +14,12 @@ class NormalRandomLookup:
     :arg verbose: print additional information?
     """
 
-    def __init__(self, verbose=False):
+    def __init__(self, distribution, verbose=False):
         """Create new instance"""
-        filename = os.path.join(os.path.dirname(__file__), "random_normal_table.json")
+        assert distribution in ["normal", "uniform"]
+        filename = os.path.join(
+            os.path.dirname(__file__), f"random_{distribution}_table.json"
+        )
         if verbose:
             print(f"Loading random numbers from file {filename}")
         with open(filename, "r", encoding="utf8") as f:
@@ -117,7 +119,7 @@ class SingleParticleConstantInitializer:
         q_j = 0
         qdot_j = j/d
         """
-        rng_table = NormalRandomLookup()
+        rng_table = RandomLookup(distribution="normal")
         return rng_table.take(self.dim), rng_table.take(self.dim)
 
 
@@ -138,7 +140,7 @@ class TwoParticleConstantInitializer:
 
     def draw(self):
         """Draw a new sample"""
-        rng_table = NormalRandomLookup()
+        rng_table = RandomLookup(distribution="normal")
         r = rng_table.take(self.dim // 2)
         u1 = list(r / self.mass1)
         u2 = list(-r / self.mass2)
@@ -164,7 +166,7 @@ class KeplerInitializer:
         phi = 0.0
         q = self.kepler_solution.position(phi)
         qdot = self.kepler_solution.velocity(phi)
-        rng_table = NormalRandomLookup()
+        rng_table = RandomLookup(distribution="normal")
         return q + self.perturbation * rng_table.take(
             3
         ), qdot + self.perturbation * rng_table.take(3)
@@ -193,7 +195,7 @@ class SchwarzschildConstantInitializer:
 
     def draw(self):
         """Draw a new sample from the exact solution of the Kepler problem"""
-        rng_table = NormalRandomLookup()
+        rng_table = RandomLookup(distribution="normal")
         r0 = 10 * self.r_s
         v0 = 1.26 * np.sqrt(0.5 * self.r_s / r0) / np.sqrt(1 - self.r_s / r0)
         x0 = np.asarray([0, r0, 0, 0]) + self.perturbation * rng_table.take(4)
