@@ -32,7 +32,7 @@ setup(
     version="1.0.0",
     packages=["conservative_nn"],
     package_dir={"": "src"},
-    package_data={"conservative_nn": ["random_normal_table.json"]},
+    package_data={"conservative_nn": ["random_normal_table.json","random_uniform_table.json"]},
     install_requires=[
         'importlib-metadata; python_version == "3.8"',
     ]
