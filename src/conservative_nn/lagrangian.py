@@ -282,7 +282,7 @@ class MultiParticleLagrangian(Lagrangian):
                 self.masses = n_part * [float(masses)]
             except:
                 raise TypeError("Can not convert masses to list")
-        assert len(masses) == n_part
+        assert len(self.masses) == self.n_part
         self.mu = float(mu)
         assert self.mu > 0, "coefficient of quadratic term must be positive"
         self.kappa = float(kappa)

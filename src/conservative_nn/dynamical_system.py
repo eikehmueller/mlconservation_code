@@ -471,7 +471,7 @@ class MultiParticleSystem(DynamicalSystem):
                 self.masses = n_part * [float(masses)]
             except:
                 raise TypeError("Can not convert masses to list")
-        assert len(masses) == n_part
+        assert len(self.masses) == self.n_part
         self.mu = float(mu)
         self.kappa = float(kappa)
         assert self.mu > 0
