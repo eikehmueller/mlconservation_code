@@ -11,10 +11,11 @@ class RandomLookup:
     Class for reading json files which contain a single list of numbers.
     This guarantees that the exact same random numbers are used in every run.
 
+    :arg dtype: data type of returned random numbers
     :arg verbose: print additional information?
     """
 
-    def __init__(self, distribution, verbose=False):
+    def __init__(self, distribution, dtype=np.float32, verbose=False):
         """Create new instance"""
         assert distribution in ["normal", "uniform"]
         filename = os.path.join(
@@ -23,7 +24,7 @@ class RandomLookup:
         if verbose:
             print(f"Loading random numbers from file {filename}")
         with open(filename, "r", encoding="utf8") as f:
-            self.data = np.asarray(json.load(f), dtype=np.float32)
+            self.data = np.asarray(json.load(f), dtype=dtype)
         self.reset()
 
     def reset(self):
@@ -138,15 +139,78 @@ class TwoParticleConstantInitializer:
         self.mass2 = mass2
         self.perturbation = perturbation
 
-    def draw(self):
-        """Draw a new sample"""
-        rng_table = RandomLookup(distribution="normal")
+    def draw(self, dtype=np.float32):
+        """Draw a new sample
+
+        :arg dtype: data type (for testing)
+        """
+        rng_table = RandomLookup(distribution="normal", dtype=dtype)
         r = rng_table.take(self.dim // 2)
         u1 = list(r / self.mass1)
         u2 = list(-r / self.mass2)
         q = rng_table.take(self.dim) + self.perturbation * rng_table.take(self.dim)
         qdot = u1 + u2 + self.perturbation * rng_table.take(self.dim)
         return (q, qdot)
+
+
+class MultiParticleConstantInitializer:
+    """Constant initialiser class for interacting multi-particle system
+
+    The N particles are placed uniformly and randomly inside a
+    d-dimensional cube [-A/2,+A/2]^d  where the volume V = A^d is chosen such that
+    V = N*a^d, i.e. A = N^{1/d}*a with the characteristic length scale a (this could
+    for example be the minimum of the two-particle potential).
+
+    The random velocities are chosen that the total momentum is zero.
+    Finally, a random normal distribution with standard deviation perturbation is added.
+
+    :arg n_part: number of particles N
+    :arg dim_space: dimension of space
+    :arg dist: characteristic length scale a
+    :arg masses: masses of the particles
+    :arg perturbation: size of perturbation to be added to initial vector
+    """
+
+    def __init__(self, n_part, dim_space, dist=1.0, masses=1.0, perturbation=0):
+        self.n_part = n_part
+        self.dim_space = dim_space
+        self.dist = dist
+        try:
+            self.masses = list(masses)
+        except:
+            try:
+                self.masses = n_part * [float(masses)]
+            except:
+                raise TypeError("Can not convert masses to list")
+        assert len(self.masses) == self.n_part
+        self.masses = np.asarray(self.masses)
+        self.perturbation = perturbation
+
+    def draw(self, dtype=np.float32):
+        """draw new sample
+
+        :arg dtype: data type (for testing)"""
+        rng_uniform_table = RandomLookup(distribution="uniform", dtype=dtype)
+        rng_normal_table = RandomLookup(distribution="normal", dtype=dtype)
+        """Draw a new sample"""
+        dim = self.n_part * self.dim_space
+        # Step 1: particle positions
+        scale = self.dist * self.n_part ** (1 / self.dim_space)
+        q = scale * (rng_uniform_table.take(dim) - 0.5)
+        # Step 2: particle velocities
+        # draw random velocities
+        u = rng_normal_table.take(dim).reshape((self.n_part, self.dim_space))
+        # compute total momentum P_tot = sum_{k=1}^{N} m_k * u_k
+        Ptot = np.average(u, axis=0, weights=self.masses).reshape(
+            1, self.dim_space
+        ) * np.sum(self.masses)
+        # subtract P_tot / (N*m_k) from each velocity
+        u -= 1 / (self.n_part * self.masses.reshape((self.n_part, 1))) * Ptot
+        qdot = u.reshape(dim)
+        return (
+            q + self.perturbation * rng_normal_table.take(dim),
+            qdot + self.perturbation * rng_normal_table.take(dim),
+        )
 
 
 class KeplerInitializer:
