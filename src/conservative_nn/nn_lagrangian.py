@@ -336,119 +336,6 @@ class SchwarzschildNNLagrangian(NNLagrangian):
         return angular_momentum
 
 
-class TwoParticleNNLagrangian(NNLagrangian):
-    """Neural network representation of Lagrangian for the two particle system
-
-    If rotation_invariant is True, invariance under rotations (i.e. the SO(d) group) is assumed.
-    If in addition reflection_invariant is True, then we also assume invariance under reflections,
-    i.e. the larger group O(d)
-
-    :arg dim_space: dimension of the space
-    :arg dense_layers: intermediate dense layers
-    :arg rotation_invariant: enforce rotational invariance
-    :arg translation_invariant: enforce translational invariance?
-    :arg reflection_invariant: enforce invariance under reflections
-    """
-
-    def __init__(
-        self,
-        dim_space,
-        dense_layers,
-        rotation_invariant=True,
-        translation_invariant=True,
-        reflection_invariant=True,
-        **kwargs
-    ):
-        super().__init__(dense_layers, **kwargs)
-        self.dim_space = dim_space
-        self.dim = 2 * dim_space
-        self.rotation_invariant = rotation_invariant
-        self.translation_invariant = translation_invariant
-        self.reflection_invariant = reflection_invariant
-
-    def call(self, inputs):
-        """Evaluate the Lagrangian for a given vector (q,qdot)
-
-        :arg inputs: 2d-dimensional phase space vector (q,qdot)
-        """
-        if self.translation_invariant:
-            # Construct dx = x1 - x2
-            q_qdot = tf.unstack(inputs, axis=-1)
-            dx = [
-                tf.math.subtract(q_qdot[j], q_qdot[self.dim_space + j])
-                for j in range(self.dim_space)
-            ]
-            u = q_qdot[self.dim : 2 * self.dim]
-            x = tf.stack(dx + u, axis=-1)
-            n_tensors = 3
-        else:
-            x = inputs
-            n_tensors = 4
-        if self.rotation_invariant:
-            x = RotationallyInvariantLayer(
-                self.dim_space, n_tensors, self.reflection_invariant
-            )(x)
-        for layer in self.dense_layers:
-            x = layer(x)
-        return x
-
-    def get_config(self):
-        """Get the model configuration"""
-        return {
-            "dim_space": self.dim_space,
-            "rotation_invariant": self.rotation_invariant,
-            "translation_invariant": self.translation_invariant,
-            "reflection_invariant": self.reflection_invariant,
-        }
-
-    @property
-    def ninvariant(self):
-        """Number of invariants that are computed by the invariant() method"""
-        return self.dim_space * (self.dim_space + 1) // 2
-
-    @tf.function
-    def invariant(self, inputs):
-        """Compute the quantities that are invariant under *all* symmetry
-        transformations of the model
-
-        Note that depending on the values of rotation_invariant and
-        translation_invariant, not all quantities might actually be conserved.
-
-        Returns a list of conserved quantities, with the first d entries containing
-        the components of the linear momentum
-
-          M_j = dL/du^{(1)}_j + dL/du^{(2)}_j and
-
-        the remaining d*(d-1)/2 entries containing the values of the angular momentum
-
-          T_{j,k} = dL/du^{(1)}_j*x^{(1)}_k - dL/du^{(1)}_k*x^{(1)}_j
-                  + dL/du^{(2)}_j*x^{(2)}_k - dL/du^{(2)}_k*x^{(2)}_j
-        """
-        if len(inputs.shape) < 2:
-            inputs = tf.reshape(inputs, shape=[1, 2 * self.dim])
-
-        q_qdot = tf.unstack(inputs, axis=-1)
-        grad_L = tf.unstack(tf.gradients(self.call(inputs), inputs)[0], axis=-1)
-        # Extract positions and dL/du
-        x1 = q_qdot[0 : self.dim_space]
-        x2 = q_qdot[self.dim_space : 2 * self.dim_space]
-        dL_du1 = grad_L[self.dim : self.dim + self.dim_space]
-        dL_du2 = grad_L[self.dim + self.dim_space : self.dim + 2 * self.dim_space]
-        # Linar momentum
-        linear_momentum = [dL_du1[j] + dL_du2[j] for j in range(self.dim_space)]
-        # Angular momentum
-        angular_momentum = []
-        for j in range(self.dim_space):
-            for k in range(j + 1, self.dim_space):
-                angular_momentum.append(
-                    tf.multiply(dL_du1[j], x1[k])
-                    - tf.multiply(dL_du1[k], x1[j])
-                    + tf.multiply(dL_du2[j], x2[k])
-                    - tf.multiply(dL_du2[k], x2[j])
-                )
-        return linear_momentum + angular_momentum
-
-
 class MultiParticleNNLagrangian(NNLagrangian):
     """Neural network representation of Lagrangian for the multi-particle system
 
@@ -581,3 +468,46 @@ class MultiParticleNNLagrangian(NNLagrangian):
                     - tf.reduce_sum(tf.multiply(dL_du[k], X[j]), axis=-1)
                 )
         return linear_momentum + angular_momentum
+
+
+class TwoParticleNNLagrangian(MultiParticleNNLagrangian):
+    """Neural network representation of Lagrangian for the two particle system
+
+    If rotation_invariant is True, invariance under rotations (i.e. the SO(d) group) is assumed.
+    If in addition reflection_invariant is True, then we also assume invariance under reflections,
+    i.e. the larger group O(d)
+
+    :arg dim_space: dimension of the space
+    :arg dense_layers: intermediate dense layers
+    :arg rotation_invariant: enforce rotational invariance
+    :arg translation_invariant: enforce translational invariance?
+    :arg reflection_invariant: enforce invariance under reflections
+    """
+
+    def __init__(
+        self,
+        dim_space,
+        dense_layers,
+        rotation_invariant=True,
+        translation_invariant=True,
+        reflection_invariant=True,
+        **kwargs
+    ):
+        super().__init__(
+            2,
+            dim_space,
+            dense_layers,
+            rotation_invariant=rotation_invariant,
+            translation_invariant=translation_invariant,
+            reflection_invariant=reflection_invariant,
+            **kwargs
+        )
+
+    def get_config(self):
+        """Get the model configuration"""
+        return {
+            "dim_space": self.dim_space,
+            "rotation_invariant": self.rotation_invariant,
+            "translation_invariant": self.translation_invariant,
+            "reflection_invariant": self.reflection_invariant,
+        }
