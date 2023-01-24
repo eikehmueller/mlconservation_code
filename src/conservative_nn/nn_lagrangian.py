@@ -447,3 +447,137 @@ class TwoParticleNNLagrangian(NNLagrangian):
                     - tf.multiply(dL_du2[k], x2[j])
                 )
         return linear_momentum + angular_momentum
+
+
+class MultiParticleNNLagrangian(NNLagrangian):
+    """Neural network representation of Lagrangian for the multi-particle system
+
+    If rotation_invariant is True, invariance under rotations (i.e. the SO(d) group) is assumed.
+    If in addition reflection_invariant is True, then we also assume invariance under reflections,
+    i.e. the larger group O(d)
+
+    :arg n_part: number of particles
+    :arg dim_space: dimension of the space
+    :arg dense_layers: intermediate dense layers
+    :arg rotation_invariant: enforce rotational invariance
+    :arg translation_invariant: enforce translational invariance?
+    :arg reflection_invariant: enforce invariance under reflections
+    """
+
+    def __init__(
+        self,
+        n_part,
+        dim_space,
+        dense_layers,
+        rotation_invariant=True,
+        translation_invariant=True,
+        reflection_invariant=True,
+        **kwargs
+    ):
+        super().__init__(dense_layers, **kwargs)
+        self.n_part = n_part
+        self.dim_space = dim_space
+        self.dim = self.n_part * dim_space
+        self.rotation_invariant = rotation_invariant
+        self.translation_invariant = translation_invariant
+        self.reflection_invariant = reflection_invariant
+
+    def call(self, inputs):
+        """Evaluate the Lagrangian for a given vector (q,qdot)
+
+        :arg inputs: 2d-dimensional phase space vector (q,qdot)
+        """
+        if self.translation_invariant:
+            q_qdot = tf.unstack(inputs, axis=-1)
+            dx = [
+                tf.math.subtract(q_qdot[j], q_qdot[k * self.dim_space + j])
+                for j in range(self.dim_space)
+                for k in range(1, self.n_part)
+            ]
+            # extract velocities
+            u = q_qdot[self.dim : 2 * self.dim]
+            # combine into one tensor
+            x = tf.stack(dx + u, axis=-1)
+            n_tensors = 2 * self.n_part - 1
+        else:
+            x = inputs
+            n_tensors = 2 * self.n_part
+        if self.rotation_invariant:
+            x = RotationallyInvariantLayer(
+                self.dim_space, n_tensors, self.reflection_invariant
+            )(x)
+        for layer in self.dense_layers:
+            x = layer(x)
+        return x
+
+    def get_config(self):
+        """Get the model configuration"""
+        return {
+            "n_part": self.n_part,
+            "dim_space": self.dim_space,
+            "rotation_invariant": self.rotation_invariant,
+            "translation_invariant": self.translation_invariant,
+            "reflection_invariant": self.reflection_invariant,
+        }
+
+    @property
+    def ninvariant(self):
+        """Number of invariants that are computed by the invariant() method"""
+        return self.dim_space * (self.dim_space + 1) // 2
+
+    @tf.function
+    def invariant(self, inputs):
+        """Compute the quantities that are invariant under *all* symmetry
+        transformations of the model
+
+        Note that depending on the values of rotation_invariant and
+        translation_invariant, not all quantities might actually be conserved.
+
+        Returns a list of conserved quantities, with the first d entries containing
+        the components of the linear momentum
+
+          M_j = sum_{k=1}^{N} dL/du^{(k)}_j and
+
+        the remaining d*(d-1)/2 entries containing the values of the angular momentum
+
+          T_{j,k} = sum_{k=1}^{N} dL/du^{(k)}_j*x^{(k)}_k - dL/du^{(k)}_k*x^{(k)}_j
+        """
+        if len(inputs.shape) < 2:
+            inputs = tf.reshape(inputs, shape=[1, 2 * self.dim])
+
+        # construct list [X_0,...,X_{D-1}], where X_j is a tensor of shape (B,N) such that
+        #     (X_j)_{b,k} = x^{(b)}_{k,j},
+        # i.e. it stores the j-th coordinate of the k-the particle in batch b.
+        X = tf.unstack(
+            tf.reshape(
+                inputs[:, : self.n_part * self.dim_space],
+                shape=(-1, self.n_part, self.dim_space),
+            ),
+            num=self.dim_space,
+            axis=-1,
+        )
+
+        # construct list [dL_du_0,...,dL_du_{D-1}], where dL_du_j is a tensor of shape (B,N) such that
+        #    (dL_du_j)_{b,k} = dL/(du_{k,j})^{(b)}
+        # i.e. it stores the derivative of L with respect to the j-th velocity component of the k-th particle in batch b
+        grad_L = tf.gradients(self.call(inputs), inputs)[0]
+        dL_du = tf.unstack(
+            tf.reshape(
+                grad_L[:, self.n_part * self.dim_space :],
+                shape=(-1, self.n_part, self.dim_space),
+            ),
+            num=self.dim_space,
+            axis=-1,
+        )
+
+        # linear momentum
+        linear_momentum = [tf.reduce_sum(dL_du_j, axis=-1) for dL_du_j in dL_du]
+        # angular momentum
+        angular_momentum = []
+        for j in range(self.dim_space):
+            for k in range(j + 1, self.dim_space):
+                angular_momentum.append(
+                    tf.reduce_sum(tf.multiply(dL_du[j], X[k]), axis=-1)
+                    - tf.reduce_sum(tf.multiply(dL_du[k], X[j]), axis=-1)
+                )
+        return linear_momentum + angular_momentum
