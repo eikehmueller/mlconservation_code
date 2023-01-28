@@ -41,7 +41,7 @@ title = "Template parameters"
 [system_specific.multi_particle]
     n_part = 3              # number of particles
     dim_space = 3           # dimension of space
-    mass = [1.0,1.0,1.0]    # masses of the particles particles
+    mass = [1.0,1.0,1.0]    # masses of the particles
     mu = 1.0                # coefficient of quadratic term in potential
     kappa = 1.0             # coefficient of quartic term in potential
 [system_specific.double_well]
