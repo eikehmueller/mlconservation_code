@@ -23,7 +23,7 @@ title = "Template parameters"
 
 # System to be simulated
 [system]
-    name = "Kepler" # Can be "Kepler", "DoubleWell", "TwoParticle", "Schwarzschild"
+    name = "Kepler" # Can be "Kepler", "DoubleWell", "TwoParticle", "MultiParticle", "Schwarzschild"
     sigma = 0.01    # Magnitude of normal noise
 
 # Symmetries of the NN model
@@ -36,6 +36,12 @@ title = "Template parameters"
 [system_specific.two_particle]
     dim_space = 3           # dimension of space
     mass = [1.0,1.0]        # masses of the two particles
+    mu = 1.0                # coefficient of quadratic term in potential
+    kappa = 1.0             # coefficient of quartic term in potential
+[system_specific.multi_particle]
+    n_part = 3              # number of particles
+    dim_space = 3           # dimension of space
+    mass = [1.0,1.0,1.0]    # masses of the particles particles
     mu = 1.0                # coefficient of quadratic term in potential
     kappa = 1.0             # coefficient of quartic term in potential
 [system_specific.double_well]

@@ -27,17 +27,20 @@ from conservative_nn.data_generator import (
 from conservative_nn.dynamical_system import (
     DoubleWellPotentialSystem,
     TwoParticleSystem,
+    MultiParticleSystem,
     SchwarzschildSystem,
 )
 from conservative_nn.nn_lagrangian import (
     SingleParticleNNLagrangian,
     TwoParticleNNLagrangian,
+    MultiParticleNNLagrangian,
     SchwarzschildNNLagrangian,
 )
 from conservative_nn.nn_lagrangian_model import NNLagrangianModel
 from conservative_nn.initializer import (
     SingleParticleConstantInitializer,
     TwoParticleConstantInitializer,
+    MultiParticleConstantInitializer,
     SchwarzschildConstantInitializer,
 )
 from conservative_nn.kepler import KeplerSolution
@@ -125,6 +128,34 @@ if parameters["system"]["name"] == "TwoParticle":
         kappa=parameters["system_specific"]["two_particle"]["kappa"],
     )
     nn_lagrangian = TwoParticleNNLagrangian(
+        dim_space,
+        dense_layers,
+        rotation_invariant=rotation_invariant,
+        translation_invariant=translation_invariant,
+        reflection_invariant=reflection_invariant,
+    )
+elif parameters["system"]["name"] == "MultiParticle":
+    n_part = parameters["system_specific"]["multi_particle"]["n_part"]
+    dim_space = parameters["system_specific"]["multi_particle"]["dim_space"]
+    dim = n_part * dim_space
+    mu = parameters["system_specific"]["multi_particle"]["mu"]
+    kappa = parameters["system_specific"]["multi_particle"]["kappa"]
+    masses = parameters["system_specific"]["multi_particle"]["mass"]
+    initializer = MultiParticleConstantInitializer(
+        n_part,
+        dim_space,
+        dist=np.sqrt(mu / kappa),
+        masses=masses,
+    )
+    dynamical_system = MultiParticleSystem(
+        n_part,
+        dim_space,
+        masses=masses,
+        mu=mu,
+        kappa=kappa,
+    )
+    nn_lagrangian = MultiParticleNNLagrangian(
+        n_part,
         dim_space,
         dense_layers,
         rotation_invariant=rotation_invariant,
