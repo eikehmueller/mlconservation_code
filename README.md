@@ -72,4 +72,4 @@ Tests are collected in the [tests subdirectory](tests). To run all tests use
 
 ```
 pytest
-```
+``` 
