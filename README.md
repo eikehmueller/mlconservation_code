@@ -2,7 +2,31 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Automated testing](https://github.com/eikehmueller/mlconservation_code/actions/workflows/python-app.yml/badge.svg)](https://github.com/eikehmueller/mlconservation_code/actions/workflows/python-app.yml)
 
-# Neural network solvers for dynamical systems with exact conservation laws
+# Neural network surrogates for dynamical systems with exact conservation laws
+
+Implementation of neural network surrogate models for simulating dynamical systems with physical conservation laws. By integrating these constraints into the architecture, the models maintain physically meaningful behaviour while still learning from observed data and leveraging the flexibility of machine learning.
+
+## Overview
+The code exploits domain-specific structure within neural networks for simulating dynamical systems. Key aspects include:
+
+- Lagrangian dynamics constrains time evolution
+- Incoporation of a-priori inductive biases
+- Custom feature engineering to enforce conservation laws via symmetries 
+- Improved numerical stability leads to better inference
+- Integration of fast C-code into Python workflow to accelerate data generation
+
+End-to-end experiments evaluate the impact of conservation constraints on model predictions.
+
+## Quick installation
+
+Clone the repository and run
+```
+pip install mlconservation_code
+```
+See below for detailed installation instructions.
+
+
+# Summary
 Following the ideas in [Greydanus et al. (2019)](https://arxiv.org/abs/1906.01563), the Lagrangian is represented by a neural network, from which the acceleration $\ddot{q}$ for a given position $q$ and velocity $\dot{q}$ can be computed via automatic differentiation. The key novelty of this work is the ability to *exactly* conserve certain physical quantities. This is achieved by using Noether's Theorem, which relates continuous symmetries of the Lagrangian with conservation laws. The neural networks are trained on noisy synthetic data obtained by solving the true equations of motion.
 
 ![Neural network architecture](figures/network_architecture.svg)
