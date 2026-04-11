@@ -17,6 +17,15 @@ The code exploits domain-specific structure within neural networks for simulatin
 
 End-to-end experiments evaluate the impact of conservation constraints on model predictions.
 
+## Achievements
+
+In contrast to a purely data-driven Lagrangian neural network (bottom), our new method (top) is stable and matches the exact solution. The solution is physical in the sense that the trajectory lies in a fixed plane.
+
+![Our method (Lagrangian NN with built-in conservation laws)](figures/trajectories_schwarzschild_rot.png)
+![Reference method (data-driven Lagrangian NN)](figures/trajectories_schwarzschild.png)
+
+The figures (taken from [our paper](https://arxiv.org/abs/2209.11661)) shows the simulation of a particle trajectory in a radially symmetric Schwarzschild metric.
+
 ## Quick installation
 
 Clone the repository and run
